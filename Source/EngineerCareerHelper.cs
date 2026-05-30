@@ -123,13 +123,23 @@ namespace TOR_EngineerCareer
 
         public static SkillObject GetGunpowderSkill()
         {
-            if (TORSkills.Instance != null)
+            return GetSkill("Gunpowder");
+        }
+
+        public static SkillObject GetSkill(string skillId)
+        {
+            if (string.IsNullOrEmpty(skillId))
+            {
+                return null;
+            }
+
+            if (skillId == "Gunpowder" && TORSkills.Instance != null)
             {
                 return TORSkills.GunPowder;
             }
 
-            return MBObjectManager.Instance?.GetObject<SkillObject>("Gunpowder")
-                ?? Game.Current?.ObjectManager?.GetObject<SkillObject>("Gunpowder");
+            return MBObjectManager.Instance?.GetObject<SkillObject>(skillId)
+                ?? Game.Current?.ObjectManager?.GetObject<SkillObject>(skillId);
         }
     }
 }

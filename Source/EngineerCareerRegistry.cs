@@ -52,13 +52,27 @@ namespace TOR_EngineerCareer
         {
             if (Engineer == null)
             {
+                SubModule.Log("Engineer career choices were not registered because the career object is missing.");
+                return;
+            }
+
+            if (Game.Current?.ObjectManager == null)
+            {
+                SubModule.Log("Engineer career choices were not registered because Game.Current is unavailable.");
                 return;
             }
 
             var allChoices = Traverse.Create(choices).Field<List<TORCareerChoicesBase>>("_allCareerChoices").Value;
+            if (allChoices == null)
+            {
+                SubModule.Log("Engineer career choices were not registered because TOR career choice list is missing.");
+                return;
+            }
+
             if (allChoices.All(x => x.GetID() != Engineer))
             {
                 allChoices.Add(new EngineerCareerChoices(Engineer));
+                SubModule.Log("Registered Engineer career choices.");
             }
 
             AddEngineerToCareerList();

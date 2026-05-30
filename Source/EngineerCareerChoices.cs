@@ -41,6 +41,12 @@ namespace TOR_EngineerCareer
 
         protected override void InitializeKeyStones()
         {
+            if (CareerID == null || _engineerRoot == null)
+            {
+                SubModule.Log("Engineer career choices skipped keystone init: career or root choice is missing.");
+                return;
+            }
+
             _engineerRoot.Initialize(CareerID,
                 $"Open Fire! orders a brutal gunline volley. While active, the Engineer gains ranged physical damage and reload speed. {EngineerCareerHelper.BuildOpenFireDurationText()}",
                 null,
@@ -55,15 +61,15 @@ namespace TOR_EngineerCareer
                 CombineMutations(
                     MutateAbilityFloat(nameof(AbilityTemplate.Duration), EngineerCareerHelper.PowderDrillDurationBonus),
                     MutateStatusAdd("let_them_have_it_melee_rls", 0.10f),
-                    MutateStatusSkillScale("let_them_have_it_melee_rls", EngineerCareerHelper.GetGunpowderSkill, EngineerCareerHelper.GunPowderEffectScale),
-                    MutateStatusSkillScale("let_them_have_it_range_dmg", EngineerCareerHelper.GetGunpowderSkill, EngineerCareerHelper.GunPowderEffectScale)));
+                    MutateStatusSkillScale("let_them_have_it_melee_rls", () => EngineerCareerHelper.GetGunpowderSkill(), EngineerCareerHelper.GunPowderEffectScale),
+                    MutateStatusSkillScale("let_them_have_it_range_dmg", () => EngineerCareerHelper.GetGunpowderSkill(), EngineerCareerHelper.GunPowderEffectScale)));
 
             Keystone("FieldTesting",
                 "Open Fire! also grants ranged physical resistance and scales with Athletics (+0.03s duration and +0.05% resistance per Athletics level).",
                 CombineMutations(
                     MutateLetThemHaveIt("let_them_have_it_range_res"),
-                    MutateAbilitySkillScale(nameof(AbilityTemplate.Duration), DefaultSkills.Athletics, EngineerCareerHelper.AthleticsDurationScale),
-                    MutateStatusSkillScale("let_them_have_it_range_res", DefaultSkills.Athletics, 0.0005f)));
+                    MutateAbilitySkillScale(nameof(AbilityTemplate.Duration), () => EngineerCareerHelper.GetSkill("Athletics"), EngineerCareerHelper.AthleticsDurationScale),
+                    MutateStatusSkillScale("let_them_have_it_range_res", () => EngineerCareerHelper.GetSkill("Athletics"), 0.0005f)));
 
             Keystone("ExplosiveRounds",
                 "Unlocks explosive bullets. Open Fire! increases the blast radius of explosive bullets.",
@@ -80,8 +86,8 @@ namespace TOR_EngineerCareer
             Keystone("Grenadier",
                 "Under Open Fire!, a grenade that kills 15 enemies at once is refunded. Open Fire! scales with Throwing (100 Throwing = +10%).",
                 CombineMutations(
-                    MutateStatusSkillScale("let_them_have_it_range_dmg", DefaultSkills.Throwing, EngineerCareerHelper.ThrowingEffectScale),
-                    MutateStatusSkillScale("let_them_have_it_melee_rls", DefaultSkills.Throwing, EngineerCareerHelper.ThrowingEffectScale)));
+                    MutateStatusSkillScale("let_them_have_it_range_dmg", () => EngineerCareerHelper.GetSkill("Throwing"), EngineerCareerHelper.ThrowingEffectScale),
+                    MutateStatusSkillScale("let_them_have_it_melee_rls", () => EngineerCareerHelper.GetSkill("Throwing"), EngineerCareerHelper.ThrowingEffectScale)));
 
             Keystone("PiercingDoctrine",
                 "Unlocks overpenetrating bullets. Open Fire! further increases ranged physical damage.",
@@ -134,7 +140,8 @@ namespace TOR_EngineerCareer
 
         private static CareerChoiceObject Register(string id)
         {
-            return Campaign.Current.ObjectManager.RegisterPresumedObject(new CareerChoiceObject(id));
+            var objectManager = Game.Current?.ObjectManager ?? Campaign.Current?.ObjectManager;
+            return objectManager.RegisterPresumedObject(new CareerChoiceObject(id));
         }
 
         private void RegisterBranch(string groupId)
@@ -148,12 +155,24 @@ namespace TOR_EngineerCareer
 
         private void Keystone(string groupId, string description, List<CareerChoiceObject.MutationObject> mutations)
         {
-            _choices[groupId + "Keystone"].Initialize(CareerID, description, groupId, false, ChoiceType.Keystone, mutations);
+            if (!_choices.TryGetValue(groupId + "Keystone", out var choice) || choice == null)
+            {
+                SubModule.Log($"Engineer keystone '{groupId}' was not registered.");
+                return;
+            }
+
+            choice.Initialize(CareerID, description, groupId, false, ChoiceType.Keystone, mutations);
         }
 
         private void Passive(string groupId, int index, string description, CareerChoiceObject.PassiveEffect passive)
         {
-            _choices[groupId + "Passive" + index].Initialize(CareerID, description, groupId, false, ChoiceType.Passive, null, passive);
+            if (!_choices.TryGetValue(groupId + "Passive" + index, out var choice) || choice == null)
+            {
+                SubModule.Log($"Engineer passive '{groupId}{index}' was not registered.");
+                return;
+            }
+
+            choice.Initialize(CareerID, description, groupId, false, ChoiceType.Passive, null, passive);
         }
 
         private static CareerChoiceObject.PassiveEffect Ammo()
@@ -313,7 +332,7 @@ namespace TOR_EngineerCareer
             };
         }
 
-        private static List<CareerChoiceObject.MutationObject> MutateAbilitySkillScale(string propertyName, SkillObject skill, float scale)
+        private static List<CareerChoiceObject.MutationObject> MutateAbilitySkillScale(string propertyName, System.Func<SkillObject> skillResolver, float scale)
         {
             return new List<CareerChoiceObject.MutationObject>
             {
@@ -324,7 +343,12 @@ namespace TOR_EngineerCareer
                     PropertyName = propertyName,
                     MutationType = OperationType.Add,
                     PropertyValue = (choice, originalValue, agent) =>
-                        CareerHelper.AddSkillEffectToValue(choice, agent, new List<SkillObject> { skill }, scale)
+                    {
+                        var skill = skillResolver();
+                        return skill == null
+                            ? 0f
+                            : CareerHelper.AddSkillEffectToValue(choice, agent, new List<SkillObject> { skill }, scale);
+                    }
                 }
             };
         }
