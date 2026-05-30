@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using HarmonyLib;
+using TaleWorlds.CampaignSystem;
+using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 
 namespace TOR_EngineerCareer
@@ -25,6 +27,16 @@ namespace TOR_EngineerCareer
             SafePatch(typeof(EngineerGrenadeAmmoPatch));
             SafePatch(typeof(EngineerBuckshotPatch));
             SafePatch(typeof(EngineerGrenadeExplosionPatch));
+            SafePatch(typeof(EngineerDwarfContrabandShopOpenPatch));
+            SafePatch(typeof(EngineerDwarfContrabandShopInventoryPatch));
+        }
+
+        protected override void OnGameStart(Game game, IGameStarter gameStarterObject)
+        {
+            if (gameStarterObject is CampaignGameStarter campaignStarter)
+            {
+                campaignStarter.AddBehavior(new EngineerDwarfContrabandCampaignBehavior());
+            }
         }
 
         public override void OnMissionBehaviorInitialize(Mission mission)

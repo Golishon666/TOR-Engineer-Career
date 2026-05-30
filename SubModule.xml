@@ -1,7 +1,7 @@
 <Module>
   <Name value="TOR Engineer Career" />
   <Id value="TOR_EngineerCareer" />
-  <Version value="v0.3.11" />
+  <Version value="v0.3.12" />
   <ModuleCategory value="Singleplayer" />
   <DependedModules>
     <DependedModule Id="Native" DependentVersion="v1.3.15" />
