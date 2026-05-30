@@ -36,6 +36,11 @@ namespace TOR_EngineerCareer
     [HarmonyPatch(typeof(TORCharacterCreationContentHandler), MethodType.Constructor)]
     internal static class TORCharacterCreationContentHandlerConstructorPatch
     {
+        private static bool Prepare()
+        {
+            return AccessTools.Constructor(typeof(TORCharacterCreationContentHandler), Type.EmptyTypes) != null;
+        }
+
         private static void Postfix(TORCharacterCreationContentHandler __instance)
         {
             var options = Traverse.Create(__instance).Field<List<CharacterCreationOption>>("_options").Value;
@@ -51,6 +56,11 @@ namespace TOR_EngineerCareer
     [HarmonyPatch(typeof(TORCharacterCreationContentHandler), "ApplyProfessionBonuses")]
     internal static class TORCharacterCreationApplyProfessionBonusesPatch
     {
+        private static bool Prepare()
+        {
+            return AccessTools.Method(typeof(TORCharacterCreationContentHandler), "ApplyProfessionBonuses") != null;
+        }
+
         private static void Postfix(TORCharacterCreationContentHandler __instance)
         {
             if (__instance.GetSelectedProfessionId() != EngineerCharacterCreation.ProfessionId)
