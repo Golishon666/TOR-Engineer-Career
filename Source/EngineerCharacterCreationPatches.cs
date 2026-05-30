@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.CharacterCreationContent;
+using TaleWorlds.CampaignSystem.ViewModelCollection.CharacterCreation;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
+using TaleWorlds.Localization;
 using TOR_Core.CampaignMechanics.CharacterCreation;
 using TOR_Core.CharacterDevelopment;
 using TOR_Core.CharacterDevelopment.CareerSystem;
@@ -16,6 +19,8 @@ namespace TOR_EngineerCareer
     {
         public const string ProfessionId = "option_3_empire_engineer";
         public const string EquipmentRosterId = "tor_cc_empire_engineer_3";
+        private const string ProfessionMenuId = "tor_profession_menu";
+        private const string InsertBeforeProfessionId = "option_3_empire_knight";
 
         public static CharacterCreationOption CreateProfessionOption()
         {
@@ -41,13 +46,104 @@ namespace TOR_EngineerCareer
             }
 
             var options = Traverse.Create(handler).Field<List<CharacterCreationOption>>("_options").Value;
-            if (options == null || options.Any(x => x.Id == ProfessionId))
+            if (options == null)
+            {
+                SubModule.Log("Character creation _options list is null.");
+                return;
+            }
+
+            if (options.Any(x => x.Id == ProfessionId))
             {
                 return;
             }
 
-            options.Add(CreateProfessionOption());
+            var professionOption = CreateProfessionOption();
+            var insertIndex = options.FindIndex(x => x.Id == InsertBeforeProfessionId);
+            if (insertIndex >= 0)
+            {
+                options.Insert(insertIndex, professionOption);
+            }
+            else
+            {
+                options.Add(professionOption);
+            }
+
             SubModule.Log($"Registered character creation profession '{ProfessionId}'.");
+        }
+
+        public static void EnsureProfessionMenuOption(TORCharacterCreationContentHandler handler, CharacterCreationManager manager)
+        {
+            if (handler == null || manager == null)
+            {
+                return;
+            }
+
+            RegisterProfessionOption(handler);
+
+            var menu = manager.GetNarrativeMenuWithId(ProfessionMenuId);
+            if (menu == null)
+            {
+                SubModule.Log($"Character creation menu '{ProfessionMenuId}' was not found.");
+                return;
+            }
+
+            var menuOptions = Traverse.Create(menu).Field<MBList<NarrativeMenuOption>>("_characterCreationMenuOptions").Value;
+            if (menuOptions == null)
+            {
+                SubModule.Log("Profession menu options list is null.");
+                return;
+            }
+
+            if (!menuOptions.Any(o => o.StringId == ProfessionId))
+            {
+                var option = CreateProfessionOption();
+                AddMenuOption(handler, menu, option);
+                SubModule.Log($"Injected missing profession menu option '{ProfessionId}'.");
+            }
+
+            MoveOptionBefore(menuOptions, ProfessionId, InsertBeforeProfessionId);
+            SubModule.Log($"Profession menu option count: {menuOptions.Count} (engineer present: {menuOptions.Any(o => o.StringId == ProfessionId)}).");
+        }
+
+        private static void AddMenuOption(
+            TORCharacterCreationContentHandler handler,
+            NarrativeMenu menu,
+            CharacterCreationOption option)
+        {
+            var narrativeOption = new NarrativeMenuOption(
+                option.Id,
+                new TextObject(option.OptionText),
+                new TextObject(option.OptionFlavourText),
+                args => Traverse.Create(handler).Method("GetOptionArgs").GetValue(args, option),
+                manager => (bool)Traverse.Create(handler).Method("OptionCondition").GetValue(manager, option),
+                manager => Traverse.Create(handler).Method("OnOptionSelected").GetValue(manager, option.Id),
+                null);
+
+            menu.AddNarrativeMenuOption(narrativeOption);
+        }
+
+        private static void MoveOptionBefore(MBList<NarrativeMenuOption> menuOptions, string optionId, string beforeOptionId)
+        {
+            var option = menuOptions.FirstOrDefault(o => o.StringId == optionId);
+            var beforeIndex = menuOptions.FindIndex(o => o.StringId == beforeOptionId);
+            if (option == null || beforeIndex < 0)
+            {
+                return;
+            }
+
+            var currentIndex = menuOptions.IndexOf(option);
+            if (currentIndex == beforeIndex)
+            {
+                return;
+            }
+
+            menuOptions.RemoveAt(currentIndex);
+            if (currentIndex < beforeIndex)
+            {
+                beforeIndex--;
+            }
+
+            menuOptions.Insert(beforeIndex, option);
         }
     }
 
@@ -61,8 +157,47 @@ namespace TOR_EngineerCareer
 
         private static void Prefix(TORCharacterCreationContentHandler __instance)
         {
-            // Must run before AddMenus() inside InitializeContent — Postfix is too late.
             EngineerCharacterCreation.RegisterProfessionOption(__instance);
+        }
+    }
+
+    [HarmonyPatch(typeof(TORCharacterCreationContentHandler), "AddMenus")]
+    internal static class EngineerCharacterCreationAddMenusPatch
+    {
+        private static bool Prepare()
+        {
+            return AccessTools.Method(typeof(TORCharacterCreationContentHandler), "AddMenus") != null;
+        }
+
+        private static void Prefix(TORCharacterCreationContentHandler __instance)
+        {
+            EngineerCharacterCreation.RegisterProfessionOption(__instance);
+        }
+
+        private static void Postfix(TORCharacterCreationContentHandler __instance, CharacterCreationManager characterCreation)
+        {
+            EngineerCharacterCreation.EnsureProfessionMenuOption(__instance, characterCreation);
+        }
+    }
+
+    [HarmonyPatch(typeof(CharacterCreationNarrativeStageVM), "RefreshMenu")]
+    internal static class EngineerCharacterCreationRefreshMenuPatch
+    {
+        private static bool Prepare()
+        {
+            return AccessTools.Method(typeof(CharacterCreationNarrativeStageVM), "RefreshMenu") != null;
+        }
+
+        private static void Prefix(CharacterCreationNarrativeStageVM __instance)
+        {
+            var manager = Traverse.Create(__instance).Field<CharacterCreationManager>("CharacterCreationManager").Value;
+            if (manager?.CurrentMenu?.StringId != "tor_profession_menu")
+            {
+                return;
+            }
+
+            var handler = TORCharacterCreationContentHandler.Instance;
+            EngineerCharacterCreation.EnsureProfessionMenuOption(handler, manager);
         }
     }
 

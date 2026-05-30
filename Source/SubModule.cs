@@ -16,6 +16,8 @@ namespace TOR_EngineerCareer
             SafePatch(typeof(TORCareerChoiceGroupsConstructorPatch));
             SafePatch(typeof(TORCareerChoicesConstructorPatch));
             SafePatch(typeof(EngineerCharacterCreationOptionsPatch));
+            SafePatch(typeof(EngineerCharacterCreationAddMenusPatch));
+            SafePatch(typeof(EngineerCharacterCreationRefreshMenuPatch));
             SafePatch(typeof(EngineerCharacterCreationApplyProfessionBonusesPatch));
             SafePatch(typeof(EngineerCareerUIPatch));
             SafePatch(typeof(EngineerRangedStaggerImmunityPatch));
