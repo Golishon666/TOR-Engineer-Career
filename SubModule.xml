@@ -1,0 +1,42 @@
+<Module>
+  <Name value="TOR Engineer Career" />
+  <Id value="TOR_EngineerCareer" />
+  <Version value="v0.3.1" />
+  <ModuleCategory value="Singleplayer" />
+  <DependedModules>
+    <DependedModule Id="Native" DependentVersion="v1.3.15" />
+    <DependedModule Id="SandBoxCore" DependentVersion="v1.3.15" />
+    <DependedModule Id="Sandbox" DependentVersion="v1.3.15" />
+    <DependedModule Id="StoryMode" DependentVersion="v1.3.15" />
+    <DependedModule Id="TOR_Armory" DependentVersion="v1.3.15" />
+    <DependedModule Id="TOR_Environment" DependentVersion="v1.3.15" />
+    <DependedModule Id="TOR_Core" DependentVersion="v1.3.15" />
+  </DependedModules>
+  <SubModules>
+    <SubModule>
+      <Name value="TOR_EngineerCareer" />
+      <DLLName value="TOR_EngineerCareer.dll" />
+      <SubModuleClassType value="TOR_EngineerCareer.SubModule" />
+      <Tags>
+        <Tag key="DedicatedServerType" value="none" />
+        <Tag key="IsNoRenderModeElement" value="false" />
+      </Tags>
+    </SubModule>
+  </SubModules>
+  <Xmls>
+    <XmlNode>
+      <XmlName id="GameText" path="tor_engineer_strings" />
+      <IncludedGameTypes>
+        <GameType value="Campaign" />
+        <GameType value="CampaignStoryMode" />
+      </IncludedGameTypes>
+    </XmlNode>
+    <XmlNode>
+      <XmlName id="EquipmentRosters" path="tor_engineer_equipment_sets" />
+      <IncludedGameTypes>
+        <GameType value="Campaign" />
+        <GameType value="CampaignStoryMode" />
+      </IncludedGameTypes>
+    </XmlNode>
+  </Xmls>
+</Module>

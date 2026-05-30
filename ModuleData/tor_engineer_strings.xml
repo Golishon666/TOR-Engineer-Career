@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<strings>
+  <string id="tor_career_title.Engineer" text="{=tor_engineer_career_title}Engineer" />
+  <string id="tor_career_rank1_name.Engineer" text="{=tor_engineer_rank1}Apprentice Engineer" />
+  <string id="tor_career_rank2_name.Engineer" text="{=tor_engineer_rank2}Field Engineer" />
+  <string id="tor_career_rank3_name.Engineer" text="{=tor_engineer_rank3}Master Engineer" />
+  <string id="tor_career_description.Engineer" text="{=tor_engineer_desc}Engineers turn powder, steel and measurement into battlefield doctrine. They fight through firearms, ammunition discipline, armor penetration and experimental shot." />
+
+  <string id="tor_careerchoice_description.EngineerRoot" text="{=tor_engineer_root}Open Fire! orders a disciplined volley. While active, the Engineer holds the line and gains ranged physical damage and reload speed. Career talents can extend the order, add ranged protection, explosive rounds, piercing shots and ricochets." />
+
+  <string id="tor_careerchoice_description.PowderDrillKeystone" text="{=tor_engineer_powder_key}Open Fire! lasts longer and grants stronger reload speed." />
+  <string id="tor_careerchoice_description.PowderDrillPassive1" text="{=tor_engineer_powder_p1}+6 extra ammo per ammunition pouch." />
+  <string id="tor_careerchoice_description.PowderDrillPassive2" text="{=tor_engineer_powder_p2}+10% personal gunpowder ranged physical damage." />
+  <string id="tor_careerchoice_description.PowderDrillPassive3" text="{=tor_engineer_powder_p3}+15% personal firearm accuracy." />
+  <string id="tor_careerchoice_description.PowderDrillPassive4" text="{=tor_engineer_powder_p4}Ranged troops in your party gain +25 Gunpowder skill." />
+
+  <string id="tor_careerchoice_description.FieldTestingKeystone" text="{=tor_engineer_field_key}Open Fire! also grants ranged physical resistance." />
+  <string id="tor_careerchoice_description.FieldTestingPassive1" text="{=tor_engineer_field_p1}+6 extra ammo per ammunition pouch." />
+  <string id="tor_careerchoice_description.FieldTestingPassive2" text="{=tor_engineer_field_p2}+15% personal ranged physical resistance." />
+  <string id="tor_careerchoice_description.FieldTestingPassive3" text="{=tor_engineer_field_p3}+20% inventory capacity for ammunition and tools." />
+  <string id="tor_careerchoice_description.FieldTestingPassive4" text="{=tor_engineer_field_p4}+1 party movement speed on the campaign map." />
+
+  <string id="tor_careerchoice_description.ExplosiveRoundsKeystone" text="{=tor_engineer_explosive_key}Unlocks explosive bullets. Open Fire! increases the blast radius of explosive bullets." />
+  <string id="tor_careerchoice_description.ExplosiveRoundsPassive1" text="{=tor_engineer_explosive_p1}+6 extra ammo per ammunition pouch." />
+  <string id="tor_careerchoice_description.ExplosiveRoundsPassive2" text="{=tor_engineer_explosive_p2}+10% personal Fire damage." />
+  <string id="tor_careerchoice_description.ExplosiveRoundsPassive3" text="{=tor_engineer_explosive_p3}+10% ranged physical damage for ranged troops." />
+  <string id="tor_careerchoice_description.ExplosiveRoundsPassive4" text="{=tor_engineer_explosive_p4}+10% personal ranged armor penetration." />
+
+  <string id="tor_careerchoice_description.SuppressionFireKeystone" text="{=tor_engineer_suppression_key}Open Fire! affects a wider area and also grants ranged physical resistance." />
+  <string id="tor_careerchoice_description.SuppressionFirePassive1" text="{=tor_engineer_suppression_p1}+6 extra ammo per ammunition pouch." />
+  <string id="tor_careerchoice_description.SuppressionFirePassive2" text="{=tor_engineer_suppression_p2}+10% ranged physical resistance for ranged troops." />
+  <string id="tor_careerchoice_description.SuppressionFirePassive3" text="{=tor_engineer_suppression_p3}+10% personal ranged physical damage." />
+  <string id="tor_careerchoice_description.SuppressionFirePassive4" text="{=tor_engineer_suppression_p4}+10 party size for the Engineer's gunline." />
+
+  <string id="tor_careerchoice_description.BallisticsKeystone" text="{=tor_engineer_ballistics_key}Open Fire! grants stronger ranged damage and reload speed." />
+  <string id="tor_careerchoice_description.BallisticsPassive1" text="{=tor_engineer_ballistics_p1}+6 extra ammo per ammunition pouch." />
+  <string id="tor_careerchoice_description.BallisticsPassive2" text="{=tor_engineer_ballistics_p2}+20% personal ranged armor penetration." />
+  <string id="tor_careerchoice_description.BallisticsPassive3" text="{=tor_engineer_ballistics_p3}+10% personal gunpowder ranged physical damage." />
+  <string id="tor_careerchoice_description.BallisticsPassive4" text="{=tor_engineer_ballistics_p4}Ranged troops in your party gain +35 Gunpowder skill." />
+
+  <string id="tor_careerchoice_description.PiercingDoctrineKeystone" text="{=tor_engineer_piercing_key}Unlocks overpenetrating bullets. Open Fire! further increases ranged physical damage." />
+  <string id="tor_careerchoice_description.PiercingDoctrinePassive1" text="{=tor_engineer_piercing_p1}+6 extra ammo per ammunition pouch." />
+  <string id="tor_careerchoice_description.PiercingDoctrinePassive2" text="{=tor_engineer_piercing_p2}+25% personal ranged armor penetration." />
+  <string id="tor_careerchoice_description.PiercingDoctrinePassive3" text="{=tor_engineer_piercing_p3}+20% personal gunpowder ranged physical damage." />
+  <string id="tor_careerchoice_description.PiercingDoctrinePassive4" text="{=tor_engineer_piercing_p4}+15% ranged physical damage for ranged troops." />
+
+  <string id="tor_careerchoice_description.RicochetTacticsKeystone" text="{=tor_engineer_ricochet_key}During Open Fire!, firearm hits ricochet into a nearby enemy." />
+  <string id="tor_careerchoice_description.RicochetTacticsPassive1" text="{=tor_engineer_ricochet_p1}+6 extra ammo per ammunition pouch." />
+  <string id="tor_careerchoice_description.RicochetTacticsPassive2" text="{=tor_engineer_ricochet_p2}+15% personal ranged physical resistance." />
+  <string id="tor_careerchoice_description.RicochetTacticsPassive3" text="{=tor_engineer_ricochet_p3}+15% personal firearm accuracy." />
+  <string id="tor_careerchoice_description.RicochetTacticsPassive4" text="{=tor_engineer_ricochet_p4}+15% ranged physical resistance for ranged troops." />
+</strings>

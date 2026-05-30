@@ -1,0 +1,9 @@
+obj/
+.vs/
+.idea/
+*.user
+*.suo
+*.log
+*.tmp
+bin/**/*.deps.json
+bin/**/*.runtimeconfig.json
