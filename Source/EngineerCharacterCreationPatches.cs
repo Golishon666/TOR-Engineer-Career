@@ -59,8 +59,9 @@ namespace TOR_EngineerCareer
             return AccessTools.Method(typeof(TORCharacterCreationContentHandler), nameof(TORCharacterCreationContentHandler.InitializeContent)) != null;
         }
 
-        private static void Postfix(TORCharacterCreationContentHandler __instance)
+        private static void Prefix(TORCharacterCreationContentHandler __instance)
         {
+            // Must run before AddMenus() inside InitializeContent — Postfix is too late.
             EngineerCharacterCreation.RegisterProfessionOption(__instance);
         }
     }
