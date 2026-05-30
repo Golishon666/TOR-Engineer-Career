@@ -30,8 +30,8 @@ namespace TOR_EngineerCareer
                 Culture = "empire",
                 StageNumber = 3,
                 EquipmentSetId = EquipmentRosterId,
-                SkillsToIncrease = new[] { "Gunpowder", "Engineering", "Tactics", "Steward" },
-                AttributeToIncrease = "Cunning",
+                SkillsToIncrease = new[] { "Gunpowder", "Gunpowder", "Gunpowder", "Engineering", "Engineering" },
+                AttributeToIncrease = "Discipline",
                 OptionText = "{=tor_engineer_cc_option}Imperial Engineer",
                 PositiveEffectText = "{=tor_engineer_cc_effect}Engineer Career",
                 OptionFlavourText = "{=tor_engineer_cc_flavour}You learned the sacred arithmetic of powder, bore and fuse in the Imperial gunnery schools. Now you take the field with rifle, shot and a doctrine simple enough for any soldier to understand: open fire."
