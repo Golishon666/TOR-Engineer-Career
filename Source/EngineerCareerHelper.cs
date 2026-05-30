@@ -21,6 +21,7 @@ namespace TOR_EngineerCareer
         public const float GunPowderEffectScale = 0.001f;
         public const float ThrowingEffectScale = 0.001f;
         public const int GrenadeRefundKillThreshold = 15;
+        public const int MaxAbilityCharge = 400;
 
         private static readonly string[] EngineerKeystoneIds =
         {

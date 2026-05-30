@@ -24,7 +24,12 @@ namespace TOR_EngineerCareer
             }
 
             Engineer = Game.Current.ObjectManager.RegisterPresumedObject(new CareerObject(CareerId));
-            Engineer.Initialize("Engineer", IsEligible, "LetThemHaveIt");
+            Engineer.Initialize(
+                "Engineer",
+                IsEligible,
+                "LetThemHaveIt",
+                EngineerCareerChargeSupplier.SupplyCharge,
+                EngineerCareerHelper.MaxAbilityCharge);
         }
 
         public static void RegisterChoiceGroups()

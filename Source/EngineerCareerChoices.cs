@@ -88,7 +88,7 @@ namespace TOR_EngineerCareer
                 MutateStatusAdd("let_them_have_it_range_dmg", 0.15f));
 
             Keystone("RicochetTactics",
-                "During Open Fire!, firearm hits ricochet into nearby enemies. Each keystone talent adds another ricochet.",
+                "During Open Fire!, firearm hits ricochet into nearby enemies and explode on impact. Each keystone talent adds another ricochet.",
                 CombineMutations(
                     MutateAbilityFloat(nameof(AbilityTemplate.Duration), EngineerCareerHelper.RicochetTacticsDurationBonus),
                     MutateTriggeredEffectFloat("apply_let_them_have_it", nameof(TriggeredEffectTemplate.Radius), 2f)));
@@ -129,7 +129,7 @@ namespace TOR_EngineerCareer
             Passive("RicochetTactics", 1, "+6 extra ammo per ammunition pouch.", Ammo());
             Passive("RicochetTactics", 2, "+15% personal ranged physical resistance.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Resistance, new DamageProportionTuple(DamageType.Physical, 15), AttackTypeMask.Ranged));
             Passive("RicochetTactics", 3, "+15% personal firearm accuracy.", new CareerChoiceObject.PassiveEffect(-15, PassiveEffectType.AccuracyPenalty, true));
-            Passive("RicochetTactics", 4, "Firearm hits ricochet once even without Open Fire!. Buckshot fires +3 extra pellets.", SpecialPassive());
+            Passive("RicochetTactics", 4, "Firearm hits ricochet once even without Open Fire! and explode on impact. Buckshot fires +3 extra pellets.", SpecialPassive());
         }
 
         private static CareerChoiceObject Register(string id)
@@ -225,10 +225,18 @@ namespace TOR_EngineerCareer
                 {
                     MutationTargetType = typeof(AbilityTemplate),
                     MutationTargetOriginalId = "LetThemHaveIt",
+                    PropertyName = nameof(AbilityTemplate.CoolDown),
+                    MutationType = OperationType.Replace,
+                    PropertyValue = (choice, originalValue, agent) => 0
+                },
+                new()
+                {
+                    MutationTargetType = typeof(AbilityTemplate),
+                    MutationTargetOriginalId = "LetThemHaveIt",
                     PropertyName = nameof(AbilityTemplate.TooltipDescription),
                     MutationType = OperationType.Replace,
                     PropertyValue = (choice, originalValue, agent) =>
-                        $"Order a disciplined volley. While Open Fire! is active, the Engineer holds the line and gains ranged physical damage and reload speed. {EngineerCareerHelper.BuildOpenFireDurationText()} Career talents can extend the order, add ranged protection, explosive rounds, piercing shots, ricochets and grenadier tricks."
+                        $"Order a disciplined volley. Charge Open Fire! by dealing firearm damage. While active, the Engineer holds the line and gains ranged physical damage and reload speed. {EngineerCareerHelper.BuildOpenFireDurationText()} Career talents can extend the order, add ranged protection, explosive rounds, piercing shots, ricochets and grenadier tricks."
                 }
             };
         }

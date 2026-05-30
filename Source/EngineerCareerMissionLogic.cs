@@ -14,6 +14,8 @@ namespace TOR_EngineerCareer
     {
         private const float ExplosiveRadius = 3f;
         private const int ExplosiveDamage = 60;
+        private const float RicochetExplosionRadius = 2.5f;
+        private const int RicochetExplosionDamage = 45;
         private const float OverpenetrationRange = 7f;
         private const float OverpenetrationConeDot = 0.86f;
         private const float RicochetRange = 6f;
@@ -78,7 +80,12 @@ namespace TOR_EngineerCareer
 
                 excluded.Add(secondary);
                 var damage = MBMath.ClampInt((int)(blow.InflictedDamage * 0.4f), 1, 90);
-                TORMissionHelper.DamageAgents(new[] { secondary }, damage, damage, affectorAgent, damageType: DamageType.Physical, hasShockWave: false, impactPosition: affectedAgent.Position, originSpellTemplate: affectorAgent.GetCareerAbility()?.Template);
+                TORMissionHelper.DamageAgents(new[] { secondary }, damage, damage, affectorAgent, damageType: DamageType.Physical, hasShockWave: false, impactPosition: secondary.Position, originSpellTemplate: affectorAgent.GetCareerAbility()?.Template);
+
+                var ricochetRadius = EngineerCareerHelper.IsOpenFireActive(affectorAgent)
+                    ? RicochetExplosionRadius + 0.5f
+                    : RicochetExplosionRadius;
+                ApplyExplosionAt(secondary.Position, affectorAgent, ricochetRadius, RicochetExplosionDamage);
             }
         }
 
@@ -94,8 +101,15 @@ namespace TOR_EngineerCareer
         private static void ApplyExplosiveRound(Agent affectedAgent, Agent affectorAgent)
         {
             var radius = EngineerCareerHelper.IsOpenFireActive(affectorAgent) ? ExplosiveRadius + 1f : ExplosiveRadius;
+            ApplyExplosionAt(affectedAgent.Position, affectorAgent, radius, ExplosiveDamage);
+        }
+
+        private static void ApplyExplosionAt(Vec3 position, Agent affectorAgent, float radius, int damage)
+        {
+            PlayExplosionFeedback(position);
+
             var targets = Mission.Current
-                .GetNearbyAgents(affectedAgent.Position.AsVec2, radius, new MBList<Agent>())
+                .GetNearbyAgents(position.AsVec2, radius, new MBList<Agent>())
                 .Where(agent => IsValidSecondaryTarget(agent, affectorAgent))
                 .ToList();
 
@@ -104,8 +118,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            PlayExplosionFeedback(affectedAgent.Position);
-            TORMissionHelper.DamageAgents(targets, ExplosiveDamage, ExplosiveDamage, affectorAgent, damageType: DamageType.Fire, hasShockWave: false, impactPosition: affectedAgent.Position, originSpellTemplate: affectorAgent.GetCareerAbility()?.Template);
+            TORMissionHelper.DamageAgents(targets, damage, damage, affectorAgent, damageType: DamageType.Fire, hasShockWave: false, impactPosition: position, originSpellTemplate: affectorAgent.GetCareerAbility()?.Template);
         }
 
         private static void ApplyOverpenetration(Agent affectedAgent, Agent affectorAgent, Blow blow, AttackCollisionData attackCollisionData)
