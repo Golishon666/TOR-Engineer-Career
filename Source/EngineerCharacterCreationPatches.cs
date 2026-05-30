@@ -4,6 +4,7 @@ using System.Linq;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.CharacterCreationContent;
+using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.CampaignSystem.ViewModelCollection.CharacterCreation;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
@@ -231,6 +232,18 @@ namespace TOR_EngineerCareer
 
             var currentGunpowder = hero.GetSkillValue(gunpowderSkill);
             hero.HeroDeveloper.SetInitialSkillLevel(gunpowderSkill, Math.Max(currentGunpowder, 25));
+            SetSpawnNearNuln(__instance);
+        }
+
+        private static void SetSpawnNearNuln(TORCharacterCreationContentHandler handler)
+        {
+            var nuln = Settlement.All.FirstOrDefault(s => s.StringId == "town_WI1");
+            var spawnPosition = nuln != null
+                ? nuln.GatePosition
+                : new CampaignVec2(new Vec2(1339.859f, 946.4326f), true);
+
+            Traverse.Create(handler).Field<CampaignVec2?>("_storedSpawnPosition").Value = spawnPosition;
+            SubModule.Log($"Engineer spawn set near Nuln ({spawnPosition.ToVec2().X}, {spawnPosition.ToVec2().Y}).");
         }
     }
 
