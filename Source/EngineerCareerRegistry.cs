@@ -38,7 +38,7 @@ namespace TOR_EngineerCareer
             RegisterGroup("FieldTesting", "Field Testing", 1);
             RegisterGroup("ExplosiveRounds", "Explosive Rounds", 2);
             RegisterGroup("SuppressionFire", "Suppression Fire", 2);
-            RegisterGroup("Ballistics", "Ballistics", 2);
+            RegisterGroup("Grenadier", "Grenadier", 2);
             RegisterGroup("PiercingDoctrine", "Piercing Doctrine", 3);
             RegisterGroup("RicochetTactics", "Ricochet Tactics", 3);
         }

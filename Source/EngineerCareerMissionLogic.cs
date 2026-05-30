@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
@@ -36,10 +37,7 @@ namespace TOR_EngineerCareer
                 ApplyOverpenetration(affectedAgent, affectorAgent, blow, attackCollisionData);
             }
 
-            if (choices.Contains("RicochetTacticsKeystone") && IsOpenFireActive(affectorAgent))
-            {
-                ApplyRicochet(affectedAgent, affectorAgent, blow);
-            }
+            ApplyRicochets(affectedAgent, affectorAgent, blow);
         }
 
         private static bool CanUseEngineerEffect(Agent affectedAgent, Agent affectorAgent, MissionWeapon affectorWeapon, Blow blow)
@@ -61,14 +59,41 @@ namespace TOR_EngineerCareer
             return affectedAgent.IsHuman && affectedAgent.IsActive() && affectedAgent.IsEnemyOf(affectorAgent);
         }
 
-        private static bool IsOpenFireActive(Agent agent)
+        private static void ApplyRicochets(Agent affectedAgent, Agent affectorAgent, Blow blow)
         {
-            return agent.GetCareerAbility()?.IsActive == true;
+            var ricochetCount = EngineerCareerHelper.GetRicochetCount(EngineerCareerHelper.IsOpenFireActive(affectorAgent));
+            if (ricochetCount <= 0)
+            {
+                return;
+            }
+
+            var excluded = new HashSet<Agent> { affectedAgent };
+            for (var i = 0; i < ricochetCount; i++)
+            {
+                var secondary = FindRicochetTarget(affectedAgent, affectorAgent, excluded);
+                if (secondary == null)
+                {
+                    break;
+                }
+
+                excluded.Add(secondary);
+                var damage = MBMath.ClampInt((int)(blow.InflictedDamage * 0.4f), 1, 90);
+                TORMissionHelper.DamageAgents(new[] { secondary }, damage, damage, affectorAgent, damageType: DamageType.Physical, hasShockWave: false, impactPosition: affectedAgent.Position, originSpellTemplate: affectorAgent.GetCareerAbility()?.Template);
+            }
+        }
+
+        private static Agent FindRicochetTarget(Agent originAgent, Agent affectorAgent, HashSet<Agent> excluded)
+        {
+            return Mission.Current
+                .GetNearbyAgents(originAgent.Position.AsVec2, RicochetRange, new MBList<Agent>())
+                .Where(agent => IsValidSecondaryTarget(agent, affectorAgent) && !excluded.Contains(agent))
+                .OrderBy(agent => agent.Position.DistanceSquared(originAgent.Position))
+                .FirstOrDefault();
         }
 
         private static void ApplyExplosiveRound(Agent affectedAgent, Agent affectorAgent)
         {
-            var radius = IsOpenFireActive(affectorAgent) ? ExplosiveRadius + 1f : ExplosiveRadius;
+            var radius = EngineerCareerHelper.IsOpenFireActive(affectorAgent) ? ExplosiveRadius + 1f : ExplosiveRadius;
             var targets = Mission.Current
                 .GetNearbyAgents(affectedAgent.Position.AsVec2, radius, new MBList<Agent>())
                 .Where(agent => IsValidSecondaryTarget(agent, affectorAgent))
@@ -113,23 +138,6 @@ namespace TOR_EngineerCareer
             }
 
             var damage = MBMath.ClampInt((int)(blow.InflictedDamage * 0.6f), 1, 120);
-            TORMissionHelper.DamageAgents(new[] { secondary }, damage, damage, affectorAgent, damageType: DamageType.Physical, hasShockWave: false, impactPosition: affectedAgent.Position, originSpellTemplate: affectorAgent.GetCareerAbility()?.Template);
-        }
-
-        private static void ApplyRicochet(Agent affectedAgent, Agent affectorAgent, Blow blow)
-        {
-            var secondary = Mission.Current
-                .GetNearbyAgents(affectedAgent.Position.AsVec2, RicochetRange, new MBList<Agent>())
-                .Where(agent => IsValidSecondaryTarget(agent, affectorAgent) && agent != affectedAgent)
-                .OrderBy(agent => agent.Position.DistanceSquared(affectedAgent.Position))
-                .FirstOrDefault();
-
-            if (secondary == null)
-            {
-                return;
-            }
-
-            var damage = MBMath.ClampInt((int)(blow.InflictedDamage * 0.4f), 1, 90);
             TORMissionHelper.DamageAgents(new[] { secondary }, damage, damage, affectorAgent, damageType: DamageType.Physical, hasShockWave: false, impactPosition: affectedAgent.Position, originSpellTemplate: affectorAgent.GetCareerAbility()?.Template);
         }
 

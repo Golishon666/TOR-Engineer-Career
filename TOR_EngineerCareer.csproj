@@ -12,6 +12,7 @@
 
   <PropertyGroup>
     <BannerlordBin>C:\Program Files (x86)\Steam\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\</BannerlordBin>
+    <BannerlordModules>C:\Program Files (x86)\Steam\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\</BannerlordModules>
     <TORCoreBin>C:\Program Files (x86)\Steam\steamapps\workshop\content\261550\3025574678\bin\Win64_Shipping_Client\</TORCoreBin>
   </PropertyGroup>
 
@@ -20,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="SandBox">
+      <HintPath>$(BannerlordModules)SandBox\bin\Win64_Shipping_Client\SandBox.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="TOR_Core">
       <HintPath>$(TORCoreBin)TOR_Core.dll</HintPath>
       <Private>false</Private>

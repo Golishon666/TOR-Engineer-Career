@@ -15,8 +15,14 @@ namespace TOR_EngineerCareer
             SafePatch(typeof(TORCareersConstructorPatch));
             SafePatch(typeof(TORCareerChoiceGroupsConstructorPatch));
             SafePatch(typeof(TORCareerChoicesConstructorPatch));
-            SafePatch(typeof(TORCharacterCreationContentHandlerConstructorPatch));
-            SafePatch(typeof(TORCharacterCreationApplyProfessionBonusesPatch));
+            SafePatch(typeof(EngineerCharacterCreationOptionsPatch));
+            SafePatch(typeof(EngineerCharacterCreationApplyProfessionBonusesPatch));
+            SafePatch(typeof(EngineerCareerUIPatch));
+            SafePatch(typeof(EngineerRangedStaggerImmunityPatch));
+            SafePatch(typeof(EngineerAgentStatsPatch));
+            SafePatch(typeof(EngineerGrenadeAmmoPatch));
+            SafePatch(typeof(EngineerBuckshotPatch));
+            SafePatch(typeof(EngineerGrenadeExplosionPatch));
         }
 
         public override void OnMissionBehaviorInitialize(Mission mission)
