@@ -8,13 +8,13 @@
 
   <string id="tor_careerchoice_description.EngineerRoot" text="{=tor_engineer_root}Open Fire! orders a disciplined volley. Charge it by dealing firearm damage. While active, the Engineer holds the line and gains ranged physical damage and reload speed. Base duration: 15 seconds. Powder Drill and Ricochet Tactics keystones add +5 seconds each. Career talents can extend the order, add ranged protection, explosive rounds, piercing shots, ricochets and grenadier tricks." />
 
-  <string id="tor_careerchoice_description.PowderDrillKeystone" text="{=tor_engineer_powder_key}Open Fire! lasts 5 seconds longer, grants stronger reload speed, and scales with Gunpowder (100 Gunpowder = +10% reload and ranged damage)." />
+  <string id="tor_careerchoice_description.PowderDrillKeystone" text="{=tor_engineer_powder_key}Open Fire! lasts 5 seconds longer, grants stronger reload speed. Now it scales with Gunpowder." />
   <string id="tor_careerchoice_description.PowderDrillPassive1" text="{=tor_engineer_powder_p1}+6 extra ammo per ammunition pouch." />
   <string id="tor_careerchoice_description.PowderDrillPassive2" text="{=tor_engineer_powder_p2}+10% personal gunpowder ranged physical damage." />
   <string id="tor_careerchoice_description.PowderDrillPassive3" text="{=tor_engineer_powder_p3}+15% personal firearm accuracy." />
   <string id="tor_careerchoice_description.PowderDrillPassive4" text="{=tor_engineer_powder_p4}Ranged troops in your party gain +25 Gunpowder skill." />
 
-  <string id="tor_careerchoice_description.FieldTestingKeystone" text="{=tor_engineer_field_key}Open Fire! also grants ranged physical resistance and scales with Athletics (+0.03s duration per Athletics level)." />
+  <string id="tor_careerchoice_description.FieldTestingKeystone" text="{=tor_engineer_field_key}Open Fire! also grants ranged physical resistance.Now it scales with Athletics." />
   <string id="tor_careerchoice_description.FieldTestingPassive1" text="{=tor_engineer_field_p1}+6 extra ammo per ammunition pouch." />
   <string id="tor_careerchoice_description.FieldTestingPassive2" text="{=tor_engineer_field_p2}+15% personal ranged physical resistance." />
   <string id="tor_careerchoice_description.FieldTestingPassive3" text="{=tor_engineer_field_p3}+15% personal firearm projectile speed." />
@@ -32,7 +32,7 @@
   <string id="tor_careerchoice_description.SuppressionFirePassive3" text="{=tor_engineer_suppression_p3}+10% personal gunpowder ranged physical damage." />
   <string id="tor_careerchoice_description.SuppressionFirePassive4" text="{=tor_engineer_suppression_p4}+10 party size for the Engineer's gunline." />
 
-  <string id="tor_careerchoice_description.GrenadierKeystone" text="{=tor_engineer_grenadier_key}Under Open Fire!, a grenade that kills 15 enemies at once is refunded. Open Fire! scales with Throwing (100 Throwing = +10%)." />
+  <string id="tor_careerchoice_description.GrenadierKeystone" text="{=tor_engineer_grenadier_key}Under Open Fire!, a grenade that kills 15 enemies at once is refunded. Now it scales with Throwing " />
   <string id="tor_careerchoice_description.GrenadierPassive1" text="{=tor_engineer_grenadier_p1}+3 extra grenades per grenade pouch." />
   <string id="tor_careerchoice_description.GrenadierPassive2" text="{=tor_engineer_grenadier_p2}+30% grenade explosion radius." />
   <string id="tor_careerchoice_description.GrenadierPassive3" text="{=tor_engineer_grenadier_p3}+30% personal Fire damage." />
