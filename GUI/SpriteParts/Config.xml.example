@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rename to Config.xml ONLY after SpriteData.xml and Assets/GauntletUI/*.tpac exist. -->
+<!-- Do NOT use ui_careersystem / ui_abilityicons — those belong to TOR_Armory and will crash the game. -->
+<Config>
+  <SpriteCategory Name="ui_tor_engineer_career">
+    <AlwaysLoad />
+  </SpriteCategory>
+  <SpriteCategory Name="ui_tor_engineer_ability">
+    <AlwaysLoad />
+  </SpriteCategory>
+</Config>

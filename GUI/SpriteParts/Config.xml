@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Config>
-  <SpriteCategory Name="ui_careersystem">
-    <AlwaysLoad />
-  </SpriteCategory>
-  <SpriteCategory Name="ui_abilityicons">
-    <AlwaysLoad />
-  </SpriteCategory>
-</Config>

@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<SpriteData>
+  <SpriteCategories>
+    <SpriteCategory>
+      <Name>ui_tor_engineer_ability</Name>
+      <SpriteSheetCount>1</SpriteSheetCount>
+      <SpriteSheetSize ID="1" Width="512" Height="512" />
+    </SpriteCategory>
+    <SpriteCategory>
+      <Name>ui_tor_engineer_career</Name>
+      <SpriteSheetCount>1</SpriteSheetCount>
+      <SpriteSheetSize ID="1" Width="512" Height="512" />
+    </SpriteCategory>
+  </SpriteCategories>
+  <SpriteParts>
+    <SpritePart>
+      <SheetID>1</SheetID>
+      <Name>engineer_open_fire_icon</Name>
+      <Width>256</Width>
+      <Height>256</Height>
+      <SheetX>4</SheetX>
+      <SheetY>4</SheetY>
+      <CategoryName>ui_tor_engineer_ability</CategoryName>
+    </SpritePart>
+    <SpritePart>
+      <SheetID>1</SheetID>
+      <Name>CareerSystem\Illustrations\Engineer</Name>
+      <Width>500</Width>
+      <Height>280</Height>
+      <SheetX>4</SheetX>
+      <SheetY>4</SheetY>
+      <CategoryName>ui_tor_engineer_career</CategoryName>
+    </SpritePart>
+  </SpriteParts>
+  <Sprites>
+    <GenericSprite>
+      <Name>engineer_open_fire_icon</Name>
+      <SpritePartName>engineer_open_fire_icon</SpritePartName>
+    </GenericSprite>
+    <GenericSprite>
+      <Name>CareerSystem\Illustrations\Engineer</Name>
+      <SpritePartName>CareerSystem\Illustrations\Engineer</SpritePartName>
+    </GenericSprite>
+  </Sprites>
+</SpriteData>

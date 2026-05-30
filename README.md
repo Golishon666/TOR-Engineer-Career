@@ -14,16 +14,43 @@ Standalone career module for The Old Realms.
 
 Source art lives in `Assets/CareerSystem/`. Game-ready sprites are generated into:
 
-- `GUI/SpriteParts/ui_careersystem/CareerSystem/Illustrations/Engineer.png` (500×280)
-- `GUI/SpriteParts/ui_abilityicons/engineer_open_fire_icon.png` (256×256)
+- `GUI/SpriteParts/ui_tor_engineer_career/CareerSystem/Illustrations/Engineer.png` (500×280)
+- `GUI/SpriteParts/ui_tor_engineer_ability/engineer_open_fire_icon.png` (256×256)
 
-After updating art, run:
+**Important:** do not ship `GUI/SpriteParts/Config.xml` until both `GUI/TOR_EngineerCareerSpriteData.xml` and `Assets/GauntletUI/*.tpac` exist. Also do not reuse category names `ui_careersystem` / `ui_abilityicons` from TOR_Armory — that causes Mod Kit / game crashes.
+
+### Modding Kit workflow
+
+1. Prepare PNGs and sync the module into the game folder:
 
 ```powershell
-.\tools\PrepareSprites.ps1
+.\tools\SetupModKitSprites.ps1
 ```
 
-Then use **Bannerlord Modding Kit** to run `TaleWorlds.TwoDimension.SpriteSheetGenerator.exe` and import the new categories in `resource.show_resource_browser`. Ship the generated `GUI/TOR_EngineerCareerSpriteData.xml` and `Assets/GauntletUI/*.tpac` with the mod.
+2. In **SpriteSheetGenerator**, compile `TOR_EngineerCareer` categories `ui_tor_engineer_career` and `ui_tor_engineer_ability`.
+
+3. Launch **Mount & Blade II: Bannerlord - Modding Kit** from Steam, enable this mod, press **Play**.
+
+4. Open the editor console with `` ` `` and run:
+
+```text
+resource.show_resource_browser
+```
+
+5. Import both sprite categories into `Assets/GauntletUI`.
+
+6. Rename `GUI/SpriteParts/Config.xml.example` to `Config.xml`, then sync again:
+
+```powershell
+.\tools\Sync-ModuleToGame.ps1
+```
+
+Ship these generated files with the mod:
+
+- `GUI/TOR_EngineerCareerSpriteData.xml`
+- `GUI/SpriteParts/Config.xml`
+- `Assets/GauntletUI/ui_tor_engineer_career_1_tex.tpac`
+- `Assets/GauntletUI/ui_tor_engineer_ability_1_tex.tpac`
 
 ## Installation
 

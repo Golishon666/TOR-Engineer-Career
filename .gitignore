@@ -7,3 +7,5 @@ obj/
 *.tmp
 bin/**/*.deps.json
 bin/**/*.runtimeconfig.json
+tools/
+tools/PrepareSprites.ps1
