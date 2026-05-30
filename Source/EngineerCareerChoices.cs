@@ -55,8 +55,8 @@ namespace TOR_EngineerCareer
                 CombineMutations(
                     MutateAbilityFloat(nameof(AbilityTemplate.Duration), EngineerCareerHelper.PowderDrillDurationBonus),
                     MutateStatusAdd("let_them_have_it_melee_rls", 0.10f),
-                    MutateStatusSkillScale("let_them_have_it_melee_rls", TORSkills.GunPowder, EngineerCareerHelper.GunPowderEffectScale),
-                    MutateStatusSkillScale("let_them_have_it_range_dmg", TORSkills.GunPowder, EngineerCareerHelper.GunPowderEffectScale)));
+                    MutateStatusSkillScale("let_them_have_it_melee_rls", EngineerCareerHelper.GetGunpowderSkill, EngineerCareerHelper.GunPowderEffectScale),
+                    MutateStatusSkillScale("let_them_have_it_range_dmg", EngineerCareerHelper.GetGunpowderSkill, EngineerCareerHelper.GunPowderEffectScale)));
 
             Keystone("FieldTesting",
                 "Open Fire! also grants ranged physical resistance and scales with Athletics (+0.03s duration and +0.05% resistance per Athletics level).",
@@ -274,6 +274,11 @@ namespace TOR_EngineerCareer
 
         private static List<CareerChoiceObject.MutationObject> MutateStatusSkillScale(string statusId, SkillObject skill, float scale)
         {
+            return MutateStatusSkillScale(statusId, () => skill, scale);
+        }
+
+        private static List<CareerChoiceObject.MutationObject> MutateStatusSkillScale(string statusId, System.Func<SkillObject> skillResolver, float scale)
+        {
             return new List<CareerChoiceObject.MutationObject>
             {
                 new()
@@ -283,7 +288,12 @@ namespace TOR_EngineerCareer
                     PropertyName = nameof(StatusEffectTemplate.BaseEffectValue),
                     MutationType = OperationType.Add,
                     PropertyValue = (choice, originalValue, agent) =>
-                        CareerHelper.AddSkillEffectToValue(choice, agent, new List<SkillObject> { skill }, scale)
+                    {
+                        var skill = skillResolver();
+                        return skill == null
+                            ? 0f
+                            : CareerHelper.AddSkillEffectToValue(choice, agent, new List<SkillObject> { skill }, scale);
+                    }
                 }
             };
         }

@@ -87,8 +87,14 @@ namespace TOR_EngineerCareer
             }
 
             hero.AddCareer(EngineerCareerRegistry.Engineer);
-            var currentGunpowder = hero.GetSkillValue(TORSkills.GunPowder);
-            hero.HeroDeveloper.SetInitialSkillLevel(TORSkills.GunPowder, Math.Max(currentGunpowder, 25));
+            var gunpowderSkill = EngineerCareerHelper.GetGunpowderSkill();
+            if (gunpowderSkill == null)
+            {
+                return;
+            }
+
+            var currentGunpowder = hero.GetSkillValue(gunpowderSkill);
+            hero.HeroDeveloper.SetInitialSkillLevel(gunpowderSkill, Math.Max(currentGunpowder, 25));
         }
     }
 

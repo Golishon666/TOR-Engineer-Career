@@ -4,6 +4,8 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
+using TaleWorlds.ObjectSystem;
+using TOR_Core.CharacterDevelopment;
 using TOR_Core.Extensions;
 
 namespace TOR_EngineerCareer
@@ -117,6 +119,17 @@ namespace TOR_EngineerCareer
         public static string BuildOpenFireDurationText()
         {
             return $"Base duration: {BaseOpenFireDuration:0}s. Powder Drill and Ricochet Tactics keystones add +{PowderDrillDurationBonus:0}s each. Field Testing keystone adds +{AthleticsDurationScale:0.##}s per Athletics level. Grenadier keystone adds +{ThrowingEffectScale * 100:0.#}% Open Fire! power per Throwing level (100 Throwing = +10%).";
+        }
+
+        public static SkillObject GetGunpowderSkill()
+        {
+            if (TORSkills.Instance != null)
+            {
+                return TORSkills.GunPowder;
+            }
+
+            return MBObjectManager.Instance?.GetObject<SkillObject>("Gunpowder")
+                ?? Game.Current?.ObjectManager?.GetObject<SkillObject>("Gunpowder");
         }
     }
 }
