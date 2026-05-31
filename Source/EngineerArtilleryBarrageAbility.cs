@@ -174,7 +174,7 @@ namespace TOR_EngineerCareer
                 MinDistance = MinTargetDistance,
                 MaxDistance = MaxTargetDistance,
                 TargetCapturingRadius = radius,
-                TooltipDescription = "{=tor_engineer_artillery_barrage_desc}Call in an inaccurate artillery barrage. Requires deployable artillery in the party. More artillery increases the strike radius and number of shells. Incendiary Fuses and Grand Battery career branches improve the barrage."
+                TooltipDescription = "{=tor_engineer_artillery_barrage_desc}Call in an inaccurate artillery barrage. Requires deployable artillery in the party. More artillery increases the strike radius and number of shells. Damaging enemies trains Gunpowder and Engineering. Incendiary Fuses and Grand Battery career branches improve the barrage."
             };
         }
     }

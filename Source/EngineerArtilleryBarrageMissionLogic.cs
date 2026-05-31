@@ -24,6 +24,8 @@ namespace TOR_EngineerCareer
         private const float ImpactRadius = 4.2f;
         private const float BurnTickInterval = 1f;
         private const float DamageVariance = 0.18f;
+        private const float GunpowderXpPerDamage = 0.35f;
+        private const float EngineeringXpPerDamage = 0.45f;
         private const float ShellVisualScale = 1.15f;
         private const string ShellMeshName = "cannonball_001";
         private const string ImpactParticle = "psys_fireball_explosion_1";
@@ -238,6 +240,7 @@ namespace TOR_EngineerCareer
                 var variance = MBRandom.RandomFloatRanged(1f - DamageVariance, 1f + DamageVariance);
                 var damage = MBMath.ClampInt((int)(impact.Damage * falloff * variance), 1, impact.Damage);
                 target.ApplyDamage(damage, impact.Position, caster, doBlow: true, hasShockWave: true, originatesFromAbility: true);
+                AwardBarrageSkillXp(caster, damage);
                 TryChargeOpenFireFromBarrage(caster, damage);
                 TryApplyBurn(target, caster);
             }
@@ -366,6 +369,28 @@ namespace TOR_EngineerCareer
             }
 
             careerAbility.AddCharge(EngineerCareerHelper.GetArtilleryBarrageOpenFireCharge(damage));
+        }
+
+        private static void AwardBarrageSkillXp(Agent caster, int damage)
+        {
+            if (damage <= 0 || !(Game.Current?.GameType is Campaign))
+            {
+                return;
+            }
+
+            var hero = caster?.GetHero();
+            if (!EngineerCareerHelper.IsEngineerHero(hero))
+            {
+                return;
+            }
+
+            var gunpowderSkill = EngineerCareerHelper.GetGunpowderSkill();
+            if (gunpowderSkill != null)
+            {
+                hero.AddSkillXp(gunpowderSkill, damage * GunpowderXpPerDamage);
+            }
+
+            hero.AddSkillXp(DefaultSkills.Engineering, damage * EngineeringXpPerDamage);
         }
 
         private static void AddBurnFeedback(Vec3 position)
