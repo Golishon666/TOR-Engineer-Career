@@ -27,7 +27,7 @@ namespace TOR_EngineerCareer
         private const float ImpactCircleRibbonWidth = 1.15f;
         private const float TrajectoryVisualLift = 1.6f;
         private const float ImpactCircleVisualLift = 0.75f;
-        private const float PendingAimTimeout = 1.25f;
+        private const float PendingAimTimeout = 4f;
         private const uint ValidColor = 0xFF20FF40;
         private const uint BlockedColor = 0xFFFF3030;
         private const uint AllyContourColor = 0xFF35B6FF;
@@ -646,9 +646,14 @@ namespace TOR_EngineerCareer
 
             SafeAimAtTarget(_pendingFireWeapon, _pendingFireTarget);
 
-            if (!SafeCheckIsTargetReached(_pendingFireWeapon, _pendingFireTarget) &&
-                _pendingFireElapsed < PendingAimTimeout)
+            if (!SafeCheckIsTargetReached(_pendingFireWeapon, _pendingFireTarget))
             {
+                if (_pendingFireElapsed >= PendingAimTimeout)
+                {
+                    ClearPendingFire();
+                    ShowMessage("Artillery cannot align exactly with that point.");
+                }
+
                 return;
             }
 
