@@ -26,6 +26,7 @@ namespace TOR_EngineerCareer
         private const float ImpactCircleRibbonWidth = 1.15f;
         private const float TrajectoryVisualLift = 1.6f;
         private const float ImpactCircleVisualLift = 0.75f;
+        private const float PendingAimTimeout = 1.25f;
         private const uint ValidColor = 0xFF20FF40;
         private const uint BlockedColor = 0xFFFF3030;
         private const uint AllyContourColor = 0xFF35B6FF;
@@ -67,6 +68,7 @@ namespace TOR_EngineerCareer
         private float _previousCustomCameraFixedDistance;
         private float _previousCustomCameraFovMultiplier;
         private RangedSiegeWeapon _pendingFireWeapon;
+        private float _pendingFireElapsed;
         private AimState _aimState = AimState.NoTarget;
 
         private enum AimState
@@ -118,7 +120,7 @@ namespace TOR_EngineerCareer
                 BlockMainAgentControl();
                 UpdateAimTargetFromMouse();
                 UpdateAimState();
-                ProcessPendingFire();
+                ProcessPendingFire(dt);
             }
 
             RefreshViewModel();
@@ -250,6 +252,7 @@ namespace TOR_EngineerCareer
             _aimTarget = Vec3.Invalid;
             _pendingFireTarget = Vec3.Invalid;
             _pendingFireWeapon = null;
+            _pendingFireElapsed = 0f;
             ClearHighlights();
             RemoveOverlayEntity();
 
@@ -469,7 +472,13 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            _aimState = SafeCanShootAtPoint(weapon, _aimTarget) ? AimState.Valid : AimState.Blocked;
+            if (!SafeAimAtTarget(weapon, _aimTarget))
+            {
+                _aimState = AimState.Blocked;
+                return;
+            }
+
+            _aimState = AimState.Valid;
         }
 
         private void TryFireNextReadyWeapon()
@@ -480,7 +489,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (_aimState != AimState.Valid)
+            if (_aimState == AimState.NoTarget || _aimState == AimState.OutOfRange)
             {
                 ShowMessage("No clear artillery shot.");
                 return;
@@ -493,7 +502,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (!SafeCanShootAtPoint(weapon, _aimTarget))
+            if (!SafeAimAtTarget(weapon, _aimTarget))
             {
                 _aimState = AimState.Blocked;
                 ShowMessage("The selected artillery cannot reach that point.");
@@ -502,15 +511,18 @@ namespace TOR_EngineerCareer
 
             _pendingFireWeapon = weapon;
             _pendingFireTarget = _aimTarget;
+            _pendingFireElapsed = 0f;
             ShowMessage("Artillery lining up.");
         }
 
-        private void ProcessPendingFire()
+        private void ProcessPendingFire(float dt)
         {
             if (_pendingFireWeapon == null)
             {
                 return;
             }
+
+            _pendingFireElapsed += dt;
 
             if (!IsReadyToFire(_pendingFireWeapon))
             {
@@ -519,8 +531,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (!SafeCanShootAtPoint(_pendingFireWeapon, _pendingFireTarget) ||
-                !SafeAimAtTarget(_pendingFireWeapon, _pendingFireTarget))
+            if (!SafeAimAtTarget(_pendingFireWeapon, _pendingFireTarget))
             {
                 ClearPendingFire();
                 _aimState = AimState.Blocked;
@@ -528,7 +539,8 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (!SafeCheckIsTargetReached(_pendingFireWeapon, _pendingFireTarget))
+            if (!SafeCheckIsTargetReached(_pendingFireWeapon, _pendingFireTarget) &&
+                _pendingFireElapsed < PendingAimTimeout)
             {
                 return;
             }
@@ -550,6 +562,7 @@ namespace TOR_EngineerCareer
         {
             _pendingFireWeapon = null;
             _pendingFireTarget = Vec3.Invalid;
+            _pendingFireElapsed = 0f;
         }
 
         private RangedSiegeWeapon GetNextReadyWeapon()
