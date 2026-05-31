@@ -58,8 +58,7 @@ namespace TOR_EngineerCareer
             try
             {
                 var origin = EngineerArtilleryControlMissionLogic.GetWeaponOrigin(__instance);
-                direction = EngineerArtilleryControlMissionLogic.GetManualTrajectoryDirection(__instance, origin, target);
-                if (direction.LengthSquared < 0.001f)
+                if (!EngineerArtilleryControlMissionLogic.TryGetManualBallisticShot(__instance, origin, target, out direction, out var manualSpeed, out _))
                 {
                     return;
                 }
@@ -67,7 +66,8 @@ namespace TOR_EngineerCareer
                 direction.Normalize();
                 orientation = Mat3.CreateMat3WithForward(in direction);
 
-                missileShootingSpeed = MathF.Max(missileShootingSpeed, missileBaseSpeed);
+                missileBaseSpeed = MathF.Max(missileBaseSpeed, manualSpeed);
+                missileShootingSpeed = MathF.Max(missileShootingSpeed, manualSpeed);
             }
             finally
             {

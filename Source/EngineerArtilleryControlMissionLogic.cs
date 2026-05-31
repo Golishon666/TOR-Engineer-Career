@@ -28,6 +28,8 @@ namespace TOR_EngineerCareer
         internal const float TrajectoryVisualLift = 1.6f;
         private const float ImpactCircleVisualLift = 0.75f;
         private const float PendingAimTimeout = 4f;
+        private const float ManualProjectileGravity = 9.81f;
+        private const float MinimumManualProjectileSpeed = 35f;
         private const uint ValidColor = 0xFF20FF40;
         private const uint BlockedColor = 0xFFFF3030;
         private const uint AllyContourColor = 0xFF35B6FF;
@@ -46,6 +48,7 @@ namespace TOR_EngineerCareer
         private static readonly FieldInfo CurrentDirectionField = typeof(RangedSiegeWeapon).GetField("CurrentDirection", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         private static readonly FieldInfo CurrentReleaseAngleField = typeof(RangedSiegeWeapon).GetField("CurrentReleaseAngle", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         private static readonly FieldInfo ReloadTargetReleaseAngleField = typeof(RangedSiegeWeapon).GetField("ReloadTargetReleaseAngle", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        private static readonly PropertyInfo ShootingSpeedProperty = typeof(RangedSiegeWeapon).GetProperty("ShootingSpeed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
         private readonly HashSet<MissionObject> _initialMissionObjects = new();
         private readonly List<RangedSiegeWeapon> _playerArtillery = new();
@@ -977,16 +980,17 @@ namespace TOR_EngineerCareer
         private void RenderTrajectory(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target, uint color)
         {
             const int segments = 24;
-            origin.z += TrajectoryVisualLift;
-            target.z += TrajectoryVisualLift;
-            var last = origin;
-            var arcHeight = GetTrajectoryArcHeight(weapon, origin, target);
+            var didSolve = TryGetManualBallisticShot(weapon, origin, target, out var direction, out var speed, out var flightTime);
+            var last = didSolve ? ManualTrajectoryPoint(origin, direction, speed, 0f) : origin;
+            last.z += TrajectoryVisualLift;
 
             for (var i = 1; i <= segments; i++)
             {
                 var t = i / (float)segments;
-                var point = Vec3.Lerp(origin, target, t);
-                point.z += MathF.Sin(t * MathF.PI) * arcHeight;
+                var point = didSolve
+                    ? ManualTrajectoryPoint(origin, direction, speed, flightTime * t)
+                    : Vec3.Lerp(origin, target, t);
+                point.z += TrajectoryVisualLift;
                 AddRibbonSegment(last, point, TrajectoryRibbonWidth, color);
                 last = point;
             }
@@ -994,16 +998,88 @@ namespace TOR_EngineerCareer
 
         internal static Vec3 GetManualTrajectoryDirection(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target)
         {
-            var arcHeight = GetTrajectoryArcHeight(weapon, origin, target);
-            var direction = target - origin;
-            direction.z += MathF.PI * arcHeight;
-            if (direction.LengthSquared < 0.001f)
+            if (TryGetManualBallisticShot(weapon, origin, target, out var direction, out _, out _))
             {
-                return Vec3.Forward;
+                return direction;
             }
 
+            var fallbackDirection = target - origin;
+            fallbackDirection.Normalize();
+            return fallbackDirection;
+        }
+
+        internal static bool TryGetManualBallisticShot(
+            RangedSiegeWeapon weapon,
+            Vec3 origin,
+            Vec3 target,
+            out Vec3 direction,
+            out float speed,
+            out float flightTime)
+        {
+            direction = Vec3.Forward;
+            speed = MathF.Max(GetReflectedShootingSpeed(weapon), MinimumManualProjectileSpeed);
+            flightTime = 0f;
+
+            var delta = target - origin;
+            var flat = new Vec3(delta.x, delta.y, 0f);
+            var distance = flat.Length;
+            if (distance < 0.001f)
+            {
+                return false;
+            }
+
+            flat.Normalize();
+            var height = delta.z;
+            var gravity = ManualProjectileGravity;
+            speed = MathF.Max(speed, GetMinimumBallisticSpeed(distance, height, gravity) + 0.5f);
+            var speedSquared = speed * speed;
+            var root = speedSquared * speedSquared - gravity * ((gravity * distance * distance) + (2f * height * speedSquared));
+            if (root < 0f)
+            {
+                return false;
+            }
+
+            var sqrt = MathF.Sqrt(root);
+            var tanTheta = IsHighArcArtillery(weapon)
+                ? (speedSquared + sqrt) / (gravity * distance)
+                : (speedSquared - sqrt) / (gravity * distance);
+            var angle = MathF.Atan(tanTheta);
+            var horizontal = MathF.Cos(angle);
+            var vertical = MathF.Sin(angle);
+            direction = (flat * horizontal) + new Vec3(0f, 0f, vertical);
             direction.Normalize();
-            return direction;
+            flightTime = distance / MathF.Max(speed * horizontal, 0.001f);
+            return true;
+        }
+
+        internal static float GetManualProjectileSpeed(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target, float currentSpeed)
+        {
+            TryGetManualBallisticShot(weapon, origin, target, out _, out var speed, out _);
+            return MathF.Max(speed, currentSpeed);
+        }
+
+        private static float GetReflectedShootingSpeed(RangedSiegeWeapon weapon)
+        {
+            try
+            {
+                return weapon == null || ShootingSpeedProperty == null ? 0f : (float)ShootingSpeedProperty.GetValue(weapon);
+            }
+            catch
+            {
+                return 0f;
+            }
+        }
+
+        private static Vec3 ManualTrajectoryPoint(Vec3 origin, Vec3 direction, float speed, float time)
+        {
+            var point = origin + (direction * speed * time);
+            point.z -= 0.5f * ManualProjectileGravity * time * time;
+            return point;
+        }
+
+        private static float GetMinimumBallisticSpeed(float distance, float height, float gravity)
+        {
+            return MathF.Sqrt(MathF.Max(0.001f, gravity * (height + MathF.Sqrt((distance * distance) + (height * height)))));
         }
 
         private static float GetTrajectoryArcHeight(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target)
