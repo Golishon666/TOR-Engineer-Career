@@ -6,7 +6,6 @@ using TaleWorlds.Engine;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
 using TOR_Core.AbilitySystem;
-using TOR_Core.BattleMechanics.DamageSystem;
 using TOR_Core.Extensions;
 using TOR_Core.Utilities;
 
@@ -22,21 +21,21 @@ namespace TOR_EngineerCareer
         private const float ShellHorizontalDriftMin = 8f;
         private const float ShellHorizontalDriftMax = 18f;
         private const float ImpactRadius = 4.2f;
-        private const float BurnTickInterval = 1f;
         private const float DamageVariance = 0.18f;
         private const float GunpowderXpPerDamage = 0.35f;
         private const float EngineeringXpPerDamage = 0.45f;
+        private const int MaxOpeningSalvoSounds = 10;
         private const float ShellVisualScale = 1.15f;
         private const string ShellMeshName = "cannonball_001";
         private const string ImpactParticle = "psys_fireball_explosion_1";
-        private const string BurnParticle = "psys_game_burning_agent";
         private const string RicochetSound = "mortar_traveling";
 
         private static readonly string[] ImpactSounds = { "mortar_explosion_1", "mortar_explosion_2" };
         private static readonly string[] SalvoSounds = { "mortar_shot_1", "mortar_shot_2" };
 
         private readonly List<ScheduledImpact> _scheduledImpacts = new();
-        private readonly List<BurningTarget> _burningTargets = new();
+        private readonly Dictionary<int, SoundEvent> _activeSounds = new();
+        private readonly List<int> _soundsToRemove = new();
 
         public void QueueBarrage(Agent caster, Vec3 targetPosition, int guns)
         {
@@ -51,19 +50,20 @@ namespace TOR_EngineerCareer
             var currentTime = Mission.Current.CurrentTime;
 
             targetPosition.z = Mission.Current.Scene.GetGroundHeightAtPosition(targetPosition);
-            PlayOpeningSalvo(caster.Position, shellCount);
+            PlayOpeningSalvo(targetPosition, shellCount);
 
             for (var i = 0; i < shellCount; i++)
             {
                 var impactPosition = GetRandomImpactPosition(targetPosition, radius);
+                var startPosition = GetShellStartPosition(impactPosition);
                 var impactTime = currentTime + FirstImpactDelay + MBRandom.RandomFloatRanged(0f, MaxRandomImpactDelay);
                 var visualStartTime = MBMath.ClampFloat(impactTime - ShellFlightTime, currentTime, impactTime);
                 _scheduledImpacts.Add(new ScheduledImpact(
                     impactTime,
                     visualStartTime,
                     caster,
-                    GetLaunchSoundPosition(caster.Position),
-                    GetShellStartPosition(impactPosition),
+                    startPosition,
+                    startPosition,
                     impactPosition,
                     damage));
             }
@@ -76,8 +76,8 @@ namespace TOR_EngineerCareer
                 return;
             }
 
+            ReleaseFinishedSounds();
             var currentTime = Mission.Current.CurrentTime;
-            UpdateBurningTargets(currentTime);
 
             if (_scheduledImpacts.Count == 0)
             {
@@ -107,8 +107,13 @@ namespace TOR_EngineerCareer
             }
 
             _scheduledImpacts.Clear();
-            _burningTargets.Clear();
+            ReleaseAllSounds();
             base.OnClearScene();
+        }
+
+        protected override void OnEndMission()
+        {
+            ReleaseAllSounds();
         }
 
         private static Vec3 GetRandomImpactPosition(Vec3 center, float radius)
@@ -130,17 +135,7 @@ namespace TOR_EngineerCareer
                 impactPosition.z + MBRandom.RandomFloatRanged(ShellSpawnHeightMin, ShellSpawnHeightMax));
         }
 
-        private static Vec3 GetLaunchSoundPosition(Vec3 casterPosition)
-        {
-            var angle = MBRandom.RandomFloatRanged(0f, (float)(System.Math.PI * 2.0));
-            var distance = MBRandom.RandomFloatRanged(3f, 12f);
-            return new Vec3(
-                casterPosition.x + (float)System.Math.Cos(angle) * distance,
-                casterPosition.y + (float)System.Math.Sin(angle) * distance,
-                casterPosition.z);
-        }
-
-        private static void UpdateShellVisual(ScheduledImpact impact, float currentTime)
+        private void UpdateShellVisual(ScheduledImpact impact, float currentTime)
         {
             if (currentTime < impact.VisualStartTime || Mission.Current == null)
             {
@@ -149,7 +144,7 @@ namespace TOR_EngineerCareer
 
             if (!impact.LaunchSoundPlayed)
             {
-                PlayRandomSound(impact.LaunchSoundPosition, SalvoSounds);
+                PlayRandomManagedSound(GetAudibleSoundPosition(impact.LaunchSoundPosition), SalvoSounds);
                 impact.LaunchSoundPlayed = true;
             }
 
@@ -265,65 +260,28 @@ namespace TOR_EngineerCareer
             }
 
             var duration = EngineerCareerHelper.GetArtilleryBarrageBurnDuration(hero);
-            var tickDamage = EngineerCareerHelper.GetArtilleryBarrageBurnDamage(caster);
-            var currentTime = Mission.Current.CurrentTime;
-            var existing = _burningTargets.FirstOrDefault(x => x.Target == target);
-            if (existing != null)
-            {
-                existing.EndTime = System.Math.Max(existing.EndTime, currentTime + duration);
-                existing.TickDamage = System.Math.Max(existing.TickDamage, tickDamage);
-                return;
-            }
-
-            _burningTargets.Add(new BurningTarget(target, caster, currentTime + duration, currentTime + BurnTickInterval, tickDamage));
-            AddBurnFeedback(target.Position);
-        }
-
-        private void UpdateBurningTargets(float currentTime)
-        {
-            if (_burningTargets.Count == 0 || Mission.Current == null)
+            if (!TORMissionHelper.ApplyStatusEffectToAgent(
+                    target,
+                    EngineerCareerHelper.ArtilleryBarrageBurnStatusEffectId,
+                    caster,
+                    duration,
+                    append: false,
+                    isMutated: false))
             {
                 return;
             }
 
-            for (var i = _burningTargets.Count - 1; i >= 0; i--)
+            if (EngineerCareerHelper.ShouldArtilleryBarrageStrengthenBurn(hero))
             {
-                var burn = _burningTargets[i];
-                if (!IsValidBurnTarget(burn.Target, burn.Caster) || currentTime >= burn.EndTime)
-                {
-                    _burningTargets.RemoveAt(i);
-                    continue;
-                }
-
-                if (currentTime < burn.NextTickTime)
-                {
-                    continue;
-                }
-
-                TORMissionHelper.DamageAgents(
-                    new[] { burn.Target },
-                    burn.TickDamage,
-                    burn.TickDamage,
-                    burn.Caster,
-                    damageType: DamageType.Fire,
-                    hasShockWave: false,
-                    impactPosition: burn.Target.Position,
-                    originSpellTemplate: burn.Caster?.GetCareerAbility()?.Template);
-
-                AddBurnFeedback(burn.Target.Position);
-                burn.NextTickTime += BurnTickInterval;
+                TORMissionHelper.ApplyStatusEffectToAgent(
+                    target,
+                    EngineerCareerHelper.ArtilleryBarrageBurnStatusEffectId,
+                    caster,
+                    duration,
+                    append: false,
+                    isMutated: false,
+                    stack: true);
             }
-        }
-
-        private static bool IsValidBurnTarget(Agent target, Agent caster)
-        {
-            return target != null &&
-                   caster != null &&
-                   target.IsHuman &&
-                   target.IsActive() &&
-                   target.Health > 0f &&
-                   !target.IsFadingOut() &&
-                   target.IsEnemyOf(caster);
         }
 
         private static void PlaySound(Vec3 position, string soundName)
@@ -344,12 +302,13 @@ namespace TOR_EngineerCareer
             PlayRandomSound(position, ImpactSounds);
         }
 
-        private static void PlayOpeningSalvo(Vec3 position, int shellCount)
+        private void PlayOpeningSalvo(Vec3 position, int shellCount)
         {
-            var salvoSounds = MBMath.ClampInt(shellCount, 1, 8);
+            var salvoSounds = MBMath.ClampInt(shellCount, 1, MaxOpeningSalvoSounds);
+            var audiblePosition = GetAudibleSoundPosition(position);
             for (var i = 0; i < salvoSounds; i++)
             {
-                PlayRandomSound(GetLaunchSoundPosition(position), SalvoSounds);
+                PlayRandomManagedSound(audiblePosition, SalvoSounds);
             }
         }
 
@@ -393,11 +352,22 @@ namespace TOR_EngineerCareer
             hero.AddSkillXp(DefaultSkills.Engineering, damage * EngineeringXpPerDamage);
         }
 
-        private static void AddBurnFeedback(Vec3 position)
+        private static Vec3 GetAudibleSoundPosition(Vec3 intendedPosition)
         {
-            var frame = MatrixFrame.Identity;
-            frame.origin = position;
-            Mission.Current.AddParticleSystemBurstByName(BurnParticle, frame, false);
+            var mission = Mission.Current;
+            if (mission == null)
+            {
+                return intendedPosition;
+            }
+
+            var cameraPosition = mission.GetCameraFrame().origin;
+            var offset = intendedPosition - cameraPosition;
+            if (offset.Length <= 45f)
+            {
+                return intendedPosition;
+            }
+
+            return cameraPosition + offset.NormalizedCopy() * 20f;
         }
 
         private static void PlayRandomSound(Vec3 position, string[] soundNames)
@@ -409,6 +379,86 @@ namespace TOR_EngineerCareer
 
             var index = MBRandom.RandomInt(soundNames.Length);
             PlaySound(position, soundNames[index]);
+        }
+
+        private void PlayRandomManagedSound(Vec3 position, string[] soundNames)
+        {
+            if (soundNames == null || soundNames.Length == 0 || Mission.Current == null)
+            {
+                return;
+            }
+
+            var index = MBRandom.RandomInt(soundNames.Length);
+            PlayManagedSound(position, soundNames[index]);
+        }
+
+        private void PlayManagedSound(Vec3 position, string soundName)
+        {
+            var soundIndex = SoundEvent.GetEventIdFromString(soundName);
+            if (soundIndex < 0 || Mission.Current == null)
+            {
+                return;
+            }
+
+            var soundEvent = SoundEvent.CreateEvent(soundIndex, Mission.Current.Scene);
+            if (soundEvent == null || soundEvent.IsNullSoundEvent())
+            {
+                soundEvent?.Release();
+                Mission.Current.MakeSound(soundIndex, position, false, false, -1, -1);
+                return;
+            }
+
+            soundEvent.PlayInPosition(position);
+            if (!soundEvent.IsValid)
+            {
+                soundEvent.Release();
+                return;
+            }
+
+            var id = soundEvent.GetSoundId();
+            if (_activeSounds.TryGetValue(id, out var existingSound))
+            {
+                existingSound?.Release();
+            }
+
+            _activeSounds[id] = soundEvent;
+        }
+
+        private void ReleaseFinishedSounds()
+        {
+            if (_activeSounds.Count == 0)
+            {
+                return;
+            }
+
+            _soundsToRemove.Clear();
+            foreach (var sound in _activeSounds)
+            {
+                if (!sound.Value.IsValid || !sound.Value.IsPlaying())
+                {
+                    _soundsToRemove.Add(sound.Key);
+                }
+            }
+
+            foreach (var id in _soundsToRemove)
+            {
+                if (_activeSounds.TryGetValue(id, out var sound))
+                {
+                    sound?.Release();
+                    _activeSounds.Remove(id);
+                }
+            }
+        }
+
+        private void ReleaseAllSounds()
+        {
+            foreach (var sound in _activeSounds.Values)
+            {
+                sound?.Stop();
+                sound?.Release();
+            }
+
+            _activeSounds.Clear();
         }
 
         private sealed class ScheduledImpact
@@ -436,22 +486,5 @@ namespace TOR_EngineerCareer
             public bool RicochetSoundPlayed { get; set; }
         }
 
-        private sealed class BurningTarget
-        {
-            public BurningTarget(Agent target, Agent caster, float endTime, float nextTickTime, int tickDamage)
-            {
-                Target = target;
-                Caster = caster;
-                EndTime = endTime;
-                NextTickTime = nextTickTime;
-                TickDamage = tickDamage;
-            }
-
-            public Agent Target { get; }
-            public Agent Caster { get; }
-            public float EndTime { get; set; }
-            public float NextTickTime { get; set; }
-            public int TickDamage { get; set; }
-        }
     }
 }

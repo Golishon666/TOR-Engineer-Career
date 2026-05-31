@@ -17,6 +17,7 @@ namespace TOR_EngineerCareer
         public const string ArtilleryBarrageIconSprite = "placeartillery_icon";
 
         public const string GrenadeExplosionId = "grenade_explosion";
+        public const string ArtilleryBarrageBurnStatusEffectId = "fireball_dot";
         public const string DefaultArtilleryItemId = "tor_dw_artillery_cannon_001";
         public const int DefaultArtilleryCount = 2;
         public const string IncendiaryFusesKeystone = "IncendiaryFusesKeystone";
@@ -176,7 +177,7 @@ namespace TOR_EngineerCareer
 
         public static float GetArtilleryBarrageOpenFireCharge(int damage)
         {
-            return MBMath.ClampFloat(damage * 0.35f, 1f, 35f);
+            return MBMath.ClampFloat(damage, 5f, 110f);
         }
 
         public static float GetArtilleryBarrageImpactRadiusBonus(Hero hero)
@@ -202,7 +203,12 @@ namespace TOR_EngineerCareer
 
         public static bool ShouldArtilleryBarrageApplyBurn(Hero hero)
         {
-            return HasChoice(hero, IncendiaryFusesKeystone);
+            return HasChoice(hero, IncendiaryFusesPassive1);
+        }
+
+        public static bool ShouldArtilleryBarrageStrengthenBurn(Hero hero)
+        {
+            return HasChoice(hero, IncendiaryFusesPassive2);
         }
 
         public static float GetArtilleryBarrageBurnDuration(Hero hero)

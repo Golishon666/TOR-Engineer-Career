@@ -50,9 +50,9 @@
   <string id="tor_careerchoice_description.RicochetTacticsPassive3" text="{=tor_engineer_ricochet_p3}+15% personal firearm accuracy." />
   <string id="tor_careerchoice_description.RicochetTacticsPassive4" text="{=tor_engineer_ricochet_p4}Firearm hits ricochet once even without Open Fire! and explode on impact. Buckshot fires +3 extra pellets." />
 
-  <string id="tor_careerchoice_description.IncendiaryFusesKeystone" text="{=tor_engineer_fuses_key}Tier I artillery doctrine: Artillery Barrage ignites enemies hit by shell impacts, dealing Fire damage over time." />
-  <string id="tor_careerchoice_description.IncendiaryFusesPassive1" text="{=tor_engineer_fuses_p1}+10% Artillery Barrage impact damage. Shell impact damage charges Open Fire!" />
-  <string id="tor_careerchoice_description.IncendiaryFusesPassive2" text="{=tor_engineer_fuses_p2}Artillery Barrage burning lasts +2 seconds and burns 15% harder." />
+  <string id="tor_careerchoice_description.IncendiaryFusesKeystone" text="{=tor_engineer_fuses_key}Artillery Barrage gains incendiary fuse upgrades." />
+  <string id="tor_careerchoice_description.IncendiaryFusesPassive1" text="{=tor_engineer_fuses_p1}+10% Artillery Barrage impact damage. Shell impacts ignite enemies and charge Open Fire!" />
+  <string id="tor_careerchoice_description.IncendiaryFusesPassive2" text="{=tor_engineer_fuses_p2}Artillery Barrage burning lasts +2 seconds and is applied twice for a heavier burn." />
   <string id="tor_careerchoice_description.IncendiaryFusesPassive3" text="{=tor_engineer_fuses_p3}Artillery Barrage cooldown is reduced by 5 seconds." />
   <string id="tor_careerchoice_description.IncendiaryFusesPassive4" text="{=tor_engineer_fuses_p4}+30% personal Fire damage." />
 

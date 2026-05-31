@@ -102,7 +102,7 @@ namespace TOR_EngineerCareer
                     MutateTriggeredEffectFloat("apply_let_them_have_it", nameof(TriggeredEffectTemplate.Radius), 2f)));
 
             Keystone("IncendiaryFuses",
-                "Tier I artillery doctrine: Artillery Barrage ignites enemies hit by shell impacts, dealing Fire damage over time.",
+                "Tier I artillery doctrine: Artillery Barrage gains incendiary fuse upgrades.",
                 NoMutations());
 
             Keystone("GrandBattery",
@@ -147,8 +147,8 @@ namespace TOR_EngineerCareer
             Passive("RicochetTactics", 3, "+15% personal firearm accuracy.", new CareerChoiceObject.PassiveEffect(-15, PassiveEffectType.AccuracyPenalty, true));
             Passive("RicochetTactics", 4, "Firearm hits ricochet once even without Open Fire! and explode on impact. Buckshot fires +3 extra pellets.", SpecialPassive());
 
-            Passive("IncendiaryFuses", 1, "+10% Artillery Barrage impact damage. Shell impact damage charges Open Fire!", SpecialPassive());
-            Passive("IncendiaryFuses", 2, "Artillery Barrage burning lasts +2 seconds and burns 15% harder.", SpecialPassive());
+            Passive("IncendiaryFuses", 1, "+10% Artillery Barrage impact damage. Shell impacts ignite enemies and charge Open Fire!", SpecialPassive());
+            Passive("IncendiaryFuses", 2, "Artillery Barrage burning lasts +2 seconds and is applied twice for a heavier burn.", SpecialPassive());
             Passive("IncendiaryFuses", 3, "Artillery Barrage cooldown is reduced by 5 seconds.", SpecialPassive());
             Passive("IncendiaryFuses", 4, "+30% personal Fire damage.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Damage, new DamageProportionTuple(DamageType.Fire, 30), AttackTypeMask.Ranged));
 
