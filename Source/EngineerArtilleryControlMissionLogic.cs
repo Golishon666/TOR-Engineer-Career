@@ -26,7 +26,7 @@ namespace TOR_EngineerCareer
         private const uint BlockedColor = 0xFFFF3030;
         private const uint PanelColor = 0xDDE8E8E8;
 
-        private static readonly InputKey ToggleControlKey = InputKey.F6;
+        private static readonly InputKey ToggleControlKey = InputKey.O;
         private static readonly InputKey FireKey = InputKey.LeftMouseButton;
 
         private readonly HashSet<MissionObject> _initialMissionObjects = new();
@@ -83,7 +83,6 @@ namespace TOR_EngineerCareer
                 UpdateAimTargetFromMouse();
                 UpdateAimState();
                 ProcessPendingFire();
-                ApplyControlCamera();
             }
 
             RefreshViewModel();
@@ -98,6 +97,7 @@ namespace TOR_EngineerCareer
 
             RenderAimPreview();
             RenderControlPanel();
+            ApplyControlCamera();
         }
 
         protected override void OnEndMission()
@@ -194,7 +194,7 @@ namespace TOR_EngineerCareer
             _aimTarget = _cameraTarget;
             UpdateAimState();
             ApplyControlCamera();
-            ShowMessage("Engineer artillery control: F6/Esc exits, LMB fires one ready gun.");
+            ShowMessage("Engineer artillery control: O/Esc exits, LMB fires one ready gun.");
         }
 
         private void ExitControlMode(string message)
@@ -567,7 +567,7 @@ namespace TOR_EngineerCareer
         {
             MBDebug.RenderDebugText(0.035f, 0.78f, "ENGINEER ARTILLERY CONTROL", PanelColor, 0.95f);
             var pending = _pendingFireWeapon == null ? string.Empty : " | LINING UP";
-            MBDebug.RenderDebugText(0.035f, 0.815f, $"F6/Esc: exit | LMB: fire | Aim: {_aimState}{pending}", PanelColor, 0.8f);
+            MBDebug.RenderDebugText(0.035f, 0.815f, $"O/Esc: exit | LMB: fire | Aim: {_aimState}{pending}", PanelColor, 0.8f);
 
             var y = 0.85f;
             for (var i = 0; i < _playerArtillery.Count; i++)
@@ -598,8 +598,8 @@ namespace TOR_EngineerCareer
             _viewModel.AimState = _aimState.ToString();
             _viewModel.ArtillerySummary = BuildArtillerySummary();
             _viewModel.StatusText = _isControlModeActive
-                ? "F6/Esc exits. LMB fires one ready gun."
-                : "F6 opens artillery control when deployed artillery is available.";
+                ? "O/Esc exits. LMB fires one ready gun."
+                : "O opens artillery control when deployed artillery is available.";
         }
 
         private string BuildArtillerySummary()
