@@ -247,7 +247,7 @@ namespace TOR_EngineerCareer
 
         public static string BuildOpenFireDurationText()
         {
-            return $"Base duration: {BaseOpenFireDuration:0}s. Powder Drill and Ricochet Tactics keystones add +{PowderDrillDurationBonus:0}s each. Field Testing keystone adds +{AthleticsDurationScale:0.##}s per Athletics level. Grenadier keystone adds +{ThrowingEffectScale * 100:0.#}% Open Fire! power per Throwing level (100 Throwing = +10%).";
+            return $"Base {BaseOpenFireDuration:0}s.";
         }
 
         public static SkillObject GetGunpowderSkill()
