@@ -16,6 +16,8 @@ namespace TOR_EngineerCareer
         public const string OpenFireIconSprite = "engineer_open_fire_icon";
 
         public const string GrenadeExplosionId = "grenade_explosion";
+        public const string DefaultArtilleryItemId = "tor_dw_artillery_cannon_001";
+        public const int DefaultArtilleryCount = 2;
         public const float BaseOpenFireDuration = 15f;
         public const float PowderDrillDurationBonus = 5f;
         public const float RicochetTacticsDurationBonus = 5f;
@@ -124,6 +126,34 @@ namespace TOR_EngineerCareer
         public static SkillObject GetGunpowderSkill()
         {
             return GetSkill("Gunpowder");
+        }
+
+        public static void EnsureDefaultArtilleryStock(Hero hero)
+        {
+            if (!IsEngineerHero(hero))
+            {
+                return;
+            }
+
+            var item = MBObjectManager.Instance?.GetObject<ItemObject>(DefaultArtilleryItemId)
+                ?? Game.Current?.ObjectManager?.GetObject<ItemObject>(DefaultArtilleryItemId);
+            var roster = hero?.PartyBelongedTo?.ItemRoster
+                ?? TaleWorlds.CampaignSystem.Party.PartyBase.MainParty?.ItemRoster;
+
+            if (item == null || roster == null)
+            {
+                SubModule.Log($"Could not grant default engineer artillery '{DefaultArtilleryItemId}': item or roster missing.");
+                return;
+            }
+
+            var missingCount = DefaultArtilleryCount - roster.GetItemNumber(item);
+            if (missingCount <= 0)
+            {
+                return;
+            }
+
+            roster.AddToCounts(item, missingCount);
+            SubModule.Log($"Granted {missingCount} default engineer artillery item(s).");
         }
 
         public static SkillObject GetSkill(string skillId)

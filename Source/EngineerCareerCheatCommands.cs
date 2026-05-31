@@ -58,7 +58,7 @@ namespace TOR_EngineerCareer
             if (CampaignCheats.CheckHelp(arguments))
             {
                 return "Usage: tor_engineer.complete_quest\n"
-                       + "Completes the Master Engineer quest line and grants CanPlaceArtillery + AbilityUser.\n"
+                       + "Completes the Master Engineer quest line and grants CanPlaceArtillery + AbilityUser + default artillery.\n"
                        + "Also marks the Nuln engineer as knowing the player.\n";
             }
 
@@ -67,6 +67,7 @@ namespace TOR_EngineerCareer
                 return "Function only available in campaign mode.\n";
             }
 
+            EnsureEngineerCareer(Hero.MainHero);
             PrepareMasterEngineerBehavior();
             var quest = EngineerQuest.GetCurrentActiveIfExists();
             if (quest != null)
@@ -75,10 +76,11 @@ namespace TOR_EngineerCareer
             }
 
             GrantEngineerQuestRewards(Hero.MainHero);
+            EngineerCareerHelper.EnsureDefaultArtilleryStock(Hero.MainHero);
 
             return quest != null
-                ? "Engineer quest completed. CanPlaceArtillery and AbilityUser granted.\n"
-                : "No active engineer quest found; quest rewards granted directly.\n";
+                ? "Engineer quest completed. CanPlaceArtillery, AbilityUser and default artillery granted.\n"
+                : "No active engineer quest found; quest rewards and default artillery granted directly.\n";
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("unlock_dwarf", "tor_engineer")]
@@ -130,7 +132,7 @@ namespace TOR_EngineerCareer
             if (CampaignCheats.CheckHelp(arguments))
             {
                 return "Usage: tor_engineer.setup_test\n"
-                       + "Grants Engineer career, 1500 Prestige, completes the master quest, and unlocks all dwarf contraband tiers.\n";
+                       + "Grants Engineer career, 1500 Prestige, default artillery, completes the master quest, and unlocks all dwarf contraband tiers.\n";
             }
 
             EnsureEngineerCareer(Hero.MainHero);
@@ -144,6 +146,7 @@ namespace TOR_EngineerCareer
             }
 
             GrantEngineerQuestRewards(Hero.MainHero);
+            EngineerCareerHelper.EnsureDefaultArtilleryStock(Hero.MainHero);
 
             for (var tier = 1; tier <= EngineerDwarfContrabandCatalog.MaxTier; tier++)
             {
@@ -154,7 +157,7 @@ namespace TOR_EngineerCareer
                 }
             }
 
-            return "Test setup complete: Engineer career, 1500 Prestige, master quest rewards, all contraband tiers.\n";
+            return "Test setup complete: Engineer career, 1500 Prestige, master quest rewards, 2 default artillery pieces, all contraband tiers.\n";
         }
 
         private static void PrepareMasterEngineerBehavior()

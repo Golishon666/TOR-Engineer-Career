@@ -27,6 +27,10 @@ namespace TOR_EngineerCareer
             SafePatch(typeof(EngineerGrenadeAmmoPatch));
             SafePatch(typeof(EngineerBuckshotPatch));
             SafePatch(typeof(EngineerGrenadeExplosionPatch));
+            SafePatch(typeof(EngineerArtilleryBarrageAbilityComponentPatch));
+            SafePatch(typeof(EngineerArtilleryBarrageDisabledPatch));
+            SafePatch(typeof(EngineerArtilleryBarrageCanCastPatch));
+            SafePatch(typeof(EngineerArtilleryBarrageActivatePatch));
             SafePatch(typeof(EngineerDwarfContrabandShopOpenPatch));
             SafePatch(typeof(EngineerDwarfContrabandShopInventoryPatch));
         }
@@ -42,6 +46,7 @@ namespace TOR_EngineerCareer
         public override void OnMissionBehaviorInitialize(Mission mission)
         {
             mission.AddMissionBehavior(new EngineerCareerMissionLogic());
+            mission.AddMissionBehavior(new EngineerArtilleryBarrageMissionLogic());
         }
 
         private void SafePatch(Type patchType)
