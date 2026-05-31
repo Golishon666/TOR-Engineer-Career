@@ -14,6 +14,7 @@ namespace TOR_EngineerCareer
     {
         public const string CareerIllustrationSprite = "CareerSystem\\Illustrations\\Engineer";
         public const string OpenFireIconSprite = "engineer_open_fire_icon";
+        public const string ArtilleryBarrageIconSprite = "engineer_artillery_barrage_icon";
 
         public const string GrenadeExplosionId = "grenade_explosion";
         public const string DefaultArtilleryItemId = "tor_dw_artillery_cannon_001";

@@ -131,7 +131,7 @@ namespace TOR_EngineerCareer
             return new AbilityTemplate(AbilityId)
             {
                 Name = "{=tor_engineer_artillery_barrage}Artillery Barrage",
-                SpriteName = "placeartillery_icon",
+                SpriteName = EngineerCareerHelper.ArtilleryBarrageIconSprite,
                 CoolDown = CooldownSeconds,
                 WindsOfMagicCost = 0,
                 BaseMisCastChance = 0f,
