@@ -147,7 +147,7 @@ namespace TOR_EngineerCareer
             Passive("RicochetTactics", 3, "+15% personal firearm accuracy.", new CareerChoiceObject.PassiveEffect(-15, PassiveEffectType.AccuracyPenalty, true));
             Passive("RicochetTactics", 4, "Firearm hits ricochet once even without Open Fire! and explode on impact. Buckshot fires +3 extra pellets.", SpecialPassive());
 
-            Passive("IncendiaryFuses", 1, "+10% Artillery Barrage impact damage.", SpecialPassive());
+            Passive("IncendiaryFuses", 1, "+10% Artillery Barrage impact damage. Shell impact damage charges Open Fire!", SpecialPassive());
             Passive("IncendiaryFuses", 2, "Artillery Barrage burning lasts +2 seconds and burns 15% harder.", SpecialPassive());
             Passive("IncendiaryFuses", 3, "Artillery Barrage cooldown is reduced by 5 seconds.", SpecialPassive());
             Passive("IncendiaryFuses", 4, "+30% personal Fire damage.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Damage, new DamageProportionTuple(DamageType.Fire, 30), AttackTypeMask.Ranged));

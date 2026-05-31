@@ -26,7 +26,9 @@ namespace TOR_EngineerCareer
                 return 0f;
             }
 
-            if (affectedAgent == null ||
+            if (affectingAgent == null ||
+                affectedAgent == null ||
+                Agent.Main == null ||
                 collisionFlag == CareerHelper.ChargeCollisionFlag.HitShield ||
                 affectingAgent.Team == affectedAgent.Team ||
                 affectingAgent.IsEnemyOf(Agent.Main) ||
@@ -58,7 +60,7 @@ namespace TOR_EngineerCareer
 
         private static bool IsGunpowderRangedHit(Agent affectingAgent, AttackTypeMask mask)
         {
-            if (mask != AttackTypeMask.Ranged)
+            if ((mask & AttackTypeMask.Ranged) == 0)
             {
                 return false;
             }

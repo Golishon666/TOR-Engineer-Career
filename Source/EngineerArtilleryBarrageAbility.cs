@@ -163,7 +163,7 @@ namespace TOR_EngineerCareer
                 ShadowCastEnabled = false,
                 ParticleEffectPrefab = "none",
                 ParticleEffectSizeModifier = 0f,
-                SoundEffectToPlay = "none",
+                SoundEffectToPlay = "mortar_shot_1",
                 ShouldSoundLoopOverDuration = false,
                 CastType = CastType.WindUp,
                 CastTime = 0.6f,

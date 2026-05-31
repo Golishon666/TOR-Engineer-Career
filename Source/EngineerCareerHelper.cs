@@ -13,8 +13,8 @@ namespace TOR_EngineerCareer
     internal static class EngineerCareerHelper
     {
         public const string CareerIllustrationSprite = "CareerSystem\\Illustrations\\Engineer";
-        public const string OpenFireIconSprite = "engineer_open_fire_icon";
-        public const string ArtilleryBarrageIconSprite = "engineer_artillery_barrage_icon";
+        public const string OpenFireIconSprite = "let_them_have_it_icon";
+        public const string ArtilleryBarrageIconSprite = "placeartillery_icon";
 
         public const string GrenadeExplosionId = "grenade_explosion";
         public const string DefaultArtilleryItemId = "tor_dw_artillery_cannon_001";
@@ -167,6 +167,16 @@ namespace TOR_EngineerCareer
             }
 
             return multiplier;
+        }
+
+        public static bool ShouldArtilleryBarrageChargeOpenFire(Hero hero)
+        {
+            return HasChoice(hero, IncendiaryFusesPassive1);
+        }
+
+        public static float GetArtilleryBarrageOpenFireCharge(int damage)
+        {
+            return MBMath.ClampFloat(damage * 0.35f, 1f, 35f);
         }
 
         public static float GetArtilleryBarrageImpactRadiusBonus(Hero hero)

@@ -5,6 +5,7 @@ using TaleWorlds.Core;
 using TaleWorlds.Engine;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
+using TOR_Core.AbilitySystem;
 using TOR_Core.BattleMechanics.DamageSystem;
 using TOR_Core.Extensions;
 using TOR_Core.Utilities;
@@ -48,6 +49,7 @@ namespace TOR_EngineerCareer
             var currentTime = Mission.Current.CurrentTime;
 
             targetPosition.z = Mission.Current.Scene.GetGroundHeightAtPosition(targetPosition);
+            PlayOpeningSalvo(caster.Position, shellCount);
 
             for (var i = 0; i < shellCount; i++)
             {
@@ -236,6 +238,7 @@ namespace TOR_EngineerCareer
                 var variance = MBRandom.RandomFloatRanged(1f - DamageVariance, 1f + DamageVariance);
                 var damage = MBMath.ClampInt((int)(impact.Damage * falloff * variance), 1, impact.Damage);
                 target.ApplyDamage(damage, impact.Position, caster, doBlow: true, hasShockWave: true, originatesFromAbility: true);
+                TryChargeOpenFireFromBarrage(caster, damage);
                 TryApplyBurn(target, caster);
             }
         }
@@ -336,6 +339,33 @@ namespace TOR_EngineerCareer
             Mission.Current.AddParticleSystemBurstByName(ImpactParticle, frame, false);
 
             PlayRandomSound(position, ImpactSounds);
+        }
+
+        private static void PlayOpeningSalvo(Vec3 position, int shellCount)
+        {
+            var salvoSounds = MBMath.ClampInt(shellCount, 1, 8);
+            for (var i = 0; i < salvoSounds; i++)
+            {
+                PlayRandomSound(GetLaunchSoundPosition(position), SalvoSounds);
+            }
+        }
+
+        private static void TryChargeOpenFireFromBarrage(Agent caster, int damage)
+        {
+            var hero = caster?.GetHero() ?? Hero.MainHero;
+            if (!EngineerCareerHelper.ShouldArtilleryBarrageChargeOpenFire(hero))
+            {
+                return;
+            }
+
+            var careerAbility = caster?.GetComponent<AbilityComponent>()?.CareerAbility
+                ?? Agent.Main?.GetComponent<AbilityComponent>()?.CareerAbility;
+            if (careerAbility == null || careerAbility.ChargeType != ChargeType.DamageDone || careerAbility.IsActive)
+            {
+                return;
+            }
+
+            careerAbility.AddCharge(EngineerCareerHelper.GetArtilleryBarrageOpenFireCharge(damage));
         }
 
         private static void AddBurnFeedback(Vec3 position)
