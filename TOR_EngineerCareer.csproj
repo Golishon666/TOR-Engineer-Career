@@ -45,6 +45,10 @@
       <HintPath>$(BannerlordBin)TaleWorlds.DotNet.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="TaleWorlds.InputSystem">
+      <HintPath>$(BannerlordBin)TaleWorlds.InputSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="TaleWorlds.Engine">
       <HintPath>$(BannerlordBin)TaleWorlds.Engine.dll</HintPath>
       <Private>false</Private>

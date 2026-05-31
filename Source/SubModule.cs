@@ -42,6 +42,7 @@ namespace TOR_EngineerCareer
         public override void OnMissionBehaviorInitialize(Mission mission)
         {
             mission.AddMissionBehavior(new EngineerCareerMissionLogic());
+            mission.AddMissionBehavior(new EngineerArtilleryControlMissionLogic());
         }
 
         private void SafePatch(Type patchType)
