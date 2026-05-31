@@ -117,7 +117,12 @@ namespace TOR_EngineerCareer
             RefreshArtilleryList();
             if (_isControlModeActive)
             {
-                BlockMainAgentControl(true);
+                SyncRegisteredPlayerArtillery();
+                BlockMainAgentControl();
+            }
+            else
+            {
+                ClearRegisteredArtillery();
             }
 
             HandleInput(dt);
@@ -131,12 +136,14 @@ namespace TOR_EngineerCareer
                 }
 
                 UpdateCameraTarget(dt);
-                BlockMainAgentControl(true);
+                BlockMainAgentControl();
                 UpdateAimTargetFromMouse();
                 SuppressPlayerArtilleryAutoFire();
+                CommandArtilleryTowardCurrentTarget();
                 UpdateAimState();
                 ProcessPendingFire(dt);
                 SuppressPlayerArtilleryAutoFire();
+                ApplyControlCamera();
             }
 
             RefreshViewModel();
@@ -149,7 +156,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            BlockMainAgentControl(true);
+            BlockMainAgentControl();
             SuppressPlayerArtilleryAutoFire();
             CommandArtilleryTowardCurrentTarget();
             UpdateHighlights();
@@ -261,9 +268,12 @@ namespace TOR_EngineerCareer
             BlockMainAgentControl(true);
 
             _cameraHeight = InitialCameraHeight;
+            _cameraForward = new Vec3(0f, 1f, 0f);
+            _cameraRight = new Vec3(1f, 0f, 0f);
             _cameraTarget = mainAgent?.Position ?? Vec3.Zero;
             UpdateCameraBasisTowardEnemy();
             _aimTarget = _cameraTarget;
+            SyncRegisteredPlayerArtillery();
             UpdateAimState();
             ApplyControlCamera();
             ShowMessage("Engineer artillery control: Alt+X/Esc exits, LMB fires one ready gun.");
@@ -279,11 +289,12 @@ namespace TOR_EngineerCareer
             _pendingFireElapsed = 0f;
             ClearHighlights();
             RemoveOverlayEntity();
+            ClearRegisteredArtillery();
 
             if (Mission != null)
             {
-                Mission.IsMainAgentObjectInteractionEnabled = _wasObjectInteractionEnabled;
-                Mission.IsMainAgentItemInteractionEnabled = _wasItemInteractionEnabled;
+                Mission.IsMainAgentObjectInteractionEnabled = true;
+                Mission.IsMainAgentItemInteractionEnabled = true;
                 RestoreMainAgentControl();
                 RestorePreviousCameraState();
             }
@@ -328,8 +339,6 @@ namespace TOR_EngineerCareer
             {
                 EnablePlayerArtilleryAI(weapon);
             }
-
-            SyncRegisteredPlayerArtillery();
 
             if (_nextWeaponIndex >= _playerArtillery.Count)
             {
@@ -508,7 +517,6 @@ namespace TOR_EngineerCareer
             mainAgent.MovementInputVector = zeroMovement;
             mainAgent.MovementFlags = Agent.MovementControlFlag.None;
             mainAgent.SetMovementDirection(in zeroMovement);
-            mainAgent.SetTargetPosition(new Vec2(mainAgent.Position.x, mainAgent.Position.y));
             mainAgent.SetAttackState(0);
             mainAgent.ResetGuard();
             mainAgent.EventControlFlags = Agent.EventControlFlag.None;
@@ -538,9 +546,11 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            mainAgent.IsItemUseDisabled = _wasMainAgentItemUseDisabled;
+            mainAgent.IsItemUseDisabled = false;
             mainAgent.MovementInputVector = _previousMovementInputVector;
             mainAgent.MovementFlags = _previousMovementFlags;
+            mainAgent.SetAttackState(0);
+            mainAgent.ResetGuard();
             RestorePreviousWieldedWeapons(mainAgent);
         }
 
