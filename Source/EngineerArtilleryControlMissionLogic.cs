@@ -45,6 +45,8 @@ namespace TOR_EngineerCareer
         private readonly HashSet<Agent> _highlightedAllies = new();
         private readonly HashSet<RangedSiegeWeapon> _highlightedArtillery = new();
         private readonly EngineerArtilleryControlVM _viewModel;
+        private static readonly HashSet<RangedSiegeWeapon> RegisteredPlayerArtillery = new();
+        private static readonly HashSet<RangedSiegeWeapon> ManualShotAllowedArtillery = new();
 
         private bool _isControlModeActive;
         private bool _wasObjectInteractionEnabled = true;
@@ -93,6 +95,7 @@ namespace TOR_EngineerCareer
 
         public override void AfterStart()
         {
+            ClearRegisteredArtillery();
             SnapshotInitialMissionObjects();
             RefreshArtilleryList();
             RefreshViewModel();
@@ -146,6 +149,8 @@ namespace TOR_EngineerCareer
             }
 
             BlockMainAgentControl(true);
+            SuppressPlayerArtilleryAutoFire();
+            CommandArtilleryTowardCurrentTarget();
             UpdateHighlights();
             RenderAimPreview();
             RenderControlPanel();
@@ -158,6 +163,8 @@ namespace TOR_EngineerCareer
             {
                 ExitControlMode(null);
             }
+
+            ClearRegisteredArtillery();
         }
 
         public override void OnRemoveBehavior()
@@ -166,6 +173,8 @@ namespace TOR_EngineerCareer
             {
                 ExitControlMode(null);
             }
+
+            ClearRegisteredArtillery();
         }
 
         private void SnapshotInitialMissionObjects()
@@ -319,6 +328,8 @@ namespace TOR_EngineerCareer
                 EnablePlayerArtilleryAI(weapon);
             }
 
+            SyncRegisteredPlayerArtillery();
+
             if (_nextWeaponIndex >= _playerArtillery.Count)
             {
                 _nextWeaponIndex = 0;
@@ -388,6 +399,61 @@ namespace TOR_EngineerCareer
                 {
                     SubModule.Log($"Failed to suppress AI artillery shot: {ex}");
                 }
+            }
+        }
+
+        private void CommandArtilleryTowardCurrentTarget()
+        {
+            if (_pendingFireWeapon != null && _pendingFireTarget.IsValid)
+            {
+                SafeAimAtTarget(_pendingFireWeapon, _pendingFireTarget);
+                return;
+            }
+
+            var weapon = GetNextCommandableWeapon();
+            if (weapon != null && _aimTarget.IsValid)
+            {
+                SafeAimAtTarget(weapon, _aimTarget);
+            }
+        }
+
+        private void SyncRegisteredPlayerArtillery()
+        {
+            RegisteredPlayerArtillery.RemoveWhere(weapon => !_playerArtillery.Contains(weapon));
+
+            foreach (var weapon in _playerArtillery)
+            {
+                RegisteredPlayerArtillery.Add(weapon);
+            }
+        }
+
+        private static void ClearRegisteredArtillery()
+        {
+            RegisteredPlayerArtillery.Clear();
+            ManualShotAllowedArtillery.Clear();
+        }
+
+        internal static bool ShouldBlockShoot(RangedSiegeWeapon weapon)
+        {
+            return weapon != null &&
+                   RegisteredPlayerArtillery.Contains(weapon) &&
+                   !ManualShotAllowedArtillery.Contains(weapon);
+        }
+
+        private static void SetManualShotAllowed(RangedSiegeWeapon weapon, bool isAllowed)
+        {
+            if (weapon == null)
+            {
+                return;
+            }
+
+            if (isAllowed)
+            {
+                ManualShotAllowedArtillery.Add(weapon);
+            }
+            else
+            {
+                ManualShotAllowedArtillery.Remove(weapon);
             }
         }
 
@@ -586,7 +652,18 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (_pendingFireWeapon.Shoot())
+            bool didShoot;
+            SetManualShotAllowed(_pendingFireWeapon, true);
+            try
+            {
+                didShoot = _pendingFireWeapon.Shoot();
+            }
+            finally
+            {
+                SetManualShotAllowed(_pendingFireWeapon, false);
+            }
+
+            if (didShoot)
             {
                 AdvanceWeaponIndexAfter(_pendingFireWeapon);
                 ClearPendingFire();

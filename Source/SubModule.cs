@@ -27,6 +27,7 @@ namespace TOR_EngineerCareer
             SafePatch(typeof(EngineerGrenadeAmmoPatch));
             SafePatch(typeof(EngineerBuckshotPatch));
             SafePatch(typeof(EngineerGrenadeExplosionPatch));
+            SafePatch(typeof(EngineerArtilleryShootPatch));
             SafePatch(typeof(EngineerDwarfContrabandShopOpenPatch));
             SafePatch(typeof(EngineerDwarfContrabandShopInventoryPatch));
         }

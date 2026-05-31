@@ -14,6 +14,21 @@ using TOR_Core.Models;
 
 namespace TOR_EngineerCareer
 {
+    [HarmonyPatch(typeof(RangedSiegeWeapon), nameof(RangedSiegeWeapon.Shoot))]
+    internal static class EngineerArtilleryShootPatch
+    {
+        private static bool Prefix(RangedSiegeWeapon __instance, ref bool __result)
+        {
+            if (!EngineerArtilleryControlMissionLogic.ShouldBlockShoot(__instance))
+            {
+                return true;
+            }
+
+            __result = false;
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(TORAgentApplyDamageModel), nameof(TORAgentApplyDamageModel.DecideAgentShrugOffBlow))]
     internal static class EngineerRangedStaggerImmunityPatch
     {
