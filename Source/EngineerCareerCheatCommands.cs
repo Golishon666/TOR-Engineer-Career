@@ -58,7 +58,7 @@ namespace TOR_EngineerCareer
             if (CampaignCheats.CheckHelp(arguments))
             {
                 return "Usage: tor_engineer.complete_quest\n"
-                       + "Completes the Master Engineer quest line and grants CanPlaceArtillery + AbilityUser.\n"
+                       + "Completes the Master Engineer quest line and grants Engineer career + CanPlaceArtillery + AbilityUser.\n"
                        + "Also marks the Nuln engineer as knowing the player.\n";
             }
 
@@ -74,12 +74,13 @@ namespace TOR_EngineerCareer
                 AdvanceQuestToCompletion(quest);
             }
 
+            EnsureEngineerCareer(Hero.MainHero);
             GrantEngineerQuestRewards(Hero.MainHero);
             EngineerCareerHelper.EnsureDefaultArtilleryStock(Hero.MainHero);
 
             return quest != null
-                ? "Engineer quest completed. CanPlaceArtillery, AbilityUser and default artillery granted.\n"
-                : "No active engineer quest found; quest rewards and default artillery granted directly.\n";
+                ? "Engineer quest completed. Engineer career, CanPlaceArtillery, AbilityUser and default artillery granted.\n"
+                : "No active engineer quest found; Engineer career, quest rewards and default artillery granted directly.\n";
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("unlock_dwarf", "tor_engineer")]
