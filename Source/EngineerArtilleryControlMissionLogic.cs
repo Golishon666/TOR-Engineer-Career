@@ -39,6 +39,13 @@ namespace TOR_EngineerCareer
         private static readonly InputKey FireKey = InputKey.LeftMouseButton;
         private static readonly FieldInfo AiRequestsShootField = typeof(RangedSiegeWeapon).GetField("_aiRequestsShoot", BindingFlags.Instance | BindingFlags.NonPublic);
         private static readonly MethodInfo CalculateLocalAimMethod = typeof(RangedSiegeWeapon).GetMethod("CalculateLocalDirectionAndLocalAngleToShootTarget", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly MethodInfo ApplyCurrentDirectionMethod = typeof(RangedSiegeWeapon).GetMethod("ApplyCurrentDirectionToEntity", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        private static readonly MethodInfo UpdateProjectilePositionMethod = typeof(RangedSiegeWeapon).GetMethod("UpdateProjectilePosition", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        private static readonly FieldInfo TargetDirectionField = typeof(RangedSiegeWeapon).GetField("TargetDirection", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        private static readonly FieldInfo TargetReleaseAngleField = typeof(RangedSiegeWeapon).GetField("TargetReleaseAngle", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        private static readonly FieldInfo CurrentDirectionField = typeof(RangedSiegeWeapon).GetField("CurrentDirection", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        private static readonly FieldInfo CurrentReleaseAngleField = typeof(RangedSiegeWeapon).GetField("CurrentReleaseAngle", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        private static readonly FieldInfo ReloadTargetReleaseAngleField = typeof(RangedSiegeWeapon).GetField("ReloadTargetReleaseAngle", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
         private readonly HashSet<MissionObject> _initialMissionObjects = new();
         private readonly List<RangedSiegeWeapon> _playerArtillery = new();
@@ -869,12 +876,8 @@ namespace TOR_EngineerCareer
                     return false;
                 }
 
-                if (weapon.AimAtTarget(target))
-                {
-                    return true;
-                }
-
-                return SafeAimAtTargetByRotation(weapon, target);
+                var acceptedTarget = weapon.AimAtTarget(target);
+                return SafeForceAimAtTargetByRotation(weapon, target) || acceptedTarget;
             }
             catch (Exception ex)
             {
@@ -883,7 +886,7 @@ namespace TOR_EngineerCareer
             }
         }
 
-        private static bool SafeAimAtTargetByRotation(RangedSiegeWeapon weapon, Vec3 target)
+        private static bool SafeForceAimAtTargetByRotation(RangedSiegeWeapon weapon, Vec3 target)
         {
             if (CalculateLocalAimMethod == null)
             {
@@ -894,12 +897,24 @@ namespace TOR_EngineerCareer
             {
                 var parameters = new object[] { target, 0f, 0f };
                 CalculateLocalAimMethod.Invoke(weapon, parameters);
-                weapon.AimAtRotation((float)parameters[1], (float)parameters[2]);
+                var direction = (float)parameters[1];
+                var releaseAngle = (float)parameters[2];
+
+                TargetDirectionField?.SetValue(weapon, direction);
+                TargetReleaseAngleField?.SetValue(weapon, releaseAngle);
+                CurrentDirectionField?.SetValue(weapon, direction);
+                CurrentReleaseAngleField?.SetValue(weapon, releaseAngle);
+                ReloadTargetReleaseAngleField?.SetValue(weapon, releaseAngle);
+
+                weapon.GiveExactInput(direction, releaseAngle);
+                weapon.AimAtRotation(direction, releaseAngle);
+                ApplyCurrentDirectionMethod?.Invoke(weapon, Array.Empty<object>());
+                UpdateProjectilePositionMethod?.Invoke(weapon, Array.Empty<object>());
                 return true;
             }
             catch (Exception ex)
             {
-                SubModule.Log($"Artillery AimAtRotation fallback failed: {ex}");
+                SubModule.Log($"Artillery forced aim fallback failed: {ex}");
                 return false;
             }
         }
