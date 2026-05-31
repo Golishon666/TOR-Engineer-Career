@@ -48,6 +48,8 @@ namespace TOR_EngineerCareer
         private bool _wasMainAgentItemUseDisabled;
         private Agent.MovementControlFlag _previousMovementFlags = Agent.MovementControlFlag.None;
         private Vec2 _previousMovementInputVector = Vec2.Zero;
+        private EquipmentIndex _previousPrimaryWieldedItemIndex;
+        private EquipmentIndex _previousOffhandWieldedItemIndex;
         private int _nextWeaponIndex;
         private float _cameraHeight = InitialCameraHeight;
         private Vec3 _cameraTarget = Vec3.Zero;
@@ -225,10 +227,13 @@ namespace TOR_EngineerCareer
             _wasMainAgentItemUseDisabled = mainAgent?.IsItemUseDisabled == true;
             _previousMovementFlags = mainAgent?.MovementFlags ?? Agent.MovementControlFlag.None;
             _previousMovementInputVector = mainAgent?.MovementInputVector ?? Vec2.Zero;
+            _previousPrimaryWieldedItemIndex = mainAgent?.GetPrimaryWieldedItemIndex() ?? EquipmentIndex.None;
+            _previousOffhandWieldedItemIndex = mainAgent?.GetOffhandWieldedItemIndex() ?? EquipmentIndex.None;
             StorePreviousCameraState();
             Mission.IsMainAgentObjectInteractionEnabled = false;
             Mission.IsMainAgentItemInteractionEnabled = false;
             Mission.SetCustomCameraIgnoreCollision(true);
+            BlockMainAgentControl(true);
 
             _cameraHeight = InitialCameraHeight;
             _cameraTarget = mainAgent?.Position ?? Vec3.Zero;
@@ -363,7 +368,7 @@ namespace TOR_EngineerCareer
             }
         }
 
-        private void BlockMainAgentControl()
+        private void BlockMainAgentControl(bool sheatheWeapons = false)
         {
             var mainAgent = Mission?.MainAgent;
             if (mainAgent == null || !mainAgent.IsActive())
@@ -379,6 +384,22 @@ namespace TOR_EngineerCareer
             mainAgent.SetAttackState(0);
             mainAgent.ResetGuard();
             mainAgent.EventControlFlags = Agent.EventControlFlag.None;
+            mainAgent.HandleStopUsingAction();
+
+            if (!sheatheWeapons)
+            {
+                return;
+            }
+
+            try
+            {
+                mainAgent.TryToSheathWeaponInHand(Agent.HandIndex.MainHand, Agent.WeaponWieldActionType.Instant);
+                mainAgent.TryToSheathWeaponInHand(Agent.HandIndex.OffHand, Agent.WeaponWieldActionType.Instant);
+            }
+            catch (Exception ex)
+            {
+                SubModule.Log($"Failed to sheathe weapons for artillery control: {ex}");
+            }
         }
 
         private void RestoreMainAgentControl()
@@ -392,6 +413,27 @@ namespace TOR_EngineerCareer
             mainAgent.IsItemUseDisabled = _wasMainAgentItemUseDisabled;
             mainAgent.MovementInputVector = _previousMovementInputVector;
             mainAgent.MovementFlags = _previousMovementFlags;
+            RestorePreviousWieldedWeapons(mainAgent);
+        }
+
+        private void RestorePreviousWieldedWeapons(Agent mainAgent)
+        {
+            try
+            {
+                if (_previousPrimaryWieldedItemIndex != EquipmentIndex.None)
+                {
+                    mainAgent.TryToWieldWeaponInSlot(_previousPrimaryWieldedItemIndex, Agent.WeaponWieldActionType.Instant, false);
+                }
+
+                if (_previousOffhandWieldedItemIndex != EquipmentIndex.None)
+                {
+                    mainAgent.TryToWieldWeaponInSlot(_previousOffhandWieldedItemIndex, Agent.WeaponWieldActionType.Instant, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                SubModule.Log($"Failed to restore weapons after artillery control: {ex}");
+            }
         }
 
         private void UpdateAimTargetFromMouse()
