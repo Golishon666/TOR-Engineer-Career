@@ -26,7 +26,8 @@ namespace TOR_EngineerCareer
         private const uint BlockedColor = 0xFFFF3030;
         private const uint PanelColor = 0xDDE8E8E8;
 
-        private static readonly InputKey ToggleControlKey = InputKey.O;
+        private static readonly InputKey ToggleControlModifierKey = InputKey.LeftAlt;
+        private static readonly InputKey ToggleControlKey = InputKey.X;
         private static readonly InputKey FireKey = InputKey.LeftMouseButton;
 
         private readonly HashSet<MissionObject> _initialMissionObjects = new();
@@ -41,6 +42,14 @@ namespace TOR_EngineerCareer
         private Vec3 _aimTarget = Vec3.Invalid;
         private Vec3 _pendingFireTarget = Vec3.Invalid;
         private MatrixFrame _previousCameraFrame = MatrixFrame.Identity;
+        private Vec3 _previousCustomCameraTargetLocalOffset = Vec3.Zero;
+        private Vec3 _previousCustomCameraLocalOffset = Vec3.Zero;
+        private Vec3 _previousCustomCameraLocalOffset2 = Vec3.Zero;
+        private Vec3 _previousCustomCameraGlobalOffset = Vec3.Zero;
+        private Vec3 _previousCustomCameraLocalRotationalOffset = Vec3.Zero;
+        private bool _previousCustomCameraIgnoreCollision;
+        private float _previousCustomCameraFixedDistance;
+        private float _previousCustomCameraFovMultiplier;
         private RangedSiegeWeapon _pendingFireWeapon;
         private AimState _aimState = AimState.NoTarget;
 
@@ -68,6 +77,16 @@ namespace TOR_EngineerCareer
 
         public override void OnMissionTick(float dt)
         {
+            if (Mission?.MissionEnded == true || Mission?.MissionIsEnding == true)
+            {
+                if (_isControlModeActive)
+                {
+                    ExitControlMode(null);
+                }
+
+                return;
+            }
+
             RefreshArtilleryList();
             HandleInput(dt);
 
@@ -141,7 +160,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (input.IsKeyPressed(ToggleControlKey))
+            if (input.IsKeyDown(ToggleControlModifierKey) && input.IsKeyPressed(ToggleControlKey))
             {
                 ToggleControlMode();
             }
@@ -186,6 +205,7 @@ namespace TOR_EngineerCareer
             _isControlModeActive = true;
             _previousCameraFrame = Mission.GetCameraFrame();
             _wasObjectInteractionEnabled = Mission.IsMainAgentObjectInteractionEnabled;
+            StorePreviousCameraState();
             Mission.IsMainAgentObjectInteractionEnabled = false;
             Mission.SetCustomCameraIgnoreCollision(true);
 
@@ -194,7 +214,7 @@ namespace TOR_EngineerCareer
             _aimTarget = _cameraTarget;
             UpdateAimState();
             ApplyControlCamera();
-            ShowMessage("Engineer artillery control: O/Esc exits, LMB fires one ready gun.");
+            ShowMessage("Engineer artillery control: Alt+X/Esc exits, LMB fires one ready gun.");
         }
 
         private void ExitControlMode(string message)
@@ -208,8 +228,7 @@ namespace TOR_EngineerCareer
             if (Mission != null)
             {
                 Mission.IsMainAgentObjectInteractionEnabled = _wasObjectInteractionEnabled;
-                Mission.SetCustomCameraIgnoreCollision(false);
-                Mission.SetCameraFrame(ref _previousCameraFrame, 0f);
+                RestorePreviousCameraState();
             }
 
             if (!string.IsNullOrEmpty(message))
@@ -352,7 +371,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            _aimState = weapon.CanShootAtPoint(_aimTarget) ? AimState.Valid : AimState.Blocked;
+            _aimState = SafeCanShootAtPoint(weapon, _aimTarget) ? AimState.Valid : AimState.Blocked;
         }
 
         private void TryFireNextReadyWeapon()
@@ -376,7 +395,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (!weapon.CanShootAtPoint(_aimTarget))
+            if (!SafeCanShootAtPoint(weapon, _aimTarget))
             {
                 _aimState = AimState.Blocked;
                 ShowMessage("The selected artillery cannot reach that point.");
@@ -402,8 +421,8 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (!_pendingFireWeapon.CanShootAtPoint(_pendingFireTarget) ||
-                !_pendingFireWeapon.AimAtTarget(_pendingFireTarget))
+            if (!SafeCanShootAtPoint(_pendingFireWeapon, _pendingFireTarget) ||
+                !SafeAimAtTarget(_pendingFireWeapon, _pendingFireTarget))
             {
                 ClearPendingFire();
                 _aimState = AimState.Blocked;
@@ -411,7 +430,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (!_pendingFireWeapon.CheckIsTargetReached(_pendingFireTarget))
+            if (!SafeCheckIsTargetReached(_pendingFireWeapon, _pendingFireTarget))
             {
                 return;
             }
@@ -466,11 +485,89 @@ namespace TOR_EngineerCareer
 
         private void ApplyControlCamera()
         {
+            if (Mission?.MainAgent == null)
+            {
+                return;
+            }
+
             var cameraPosition = _cameraTarget + new Vec3(0f, -_cameraHeight * CameraTiltFactor, _cameraHeight);
             var lookAt = _cameraTarget;
             var up = Vec3.Up;
             var frame = MatrixFrame.CreateLookAt(in cameraPosition, in lookAt, in up);
+            var targetOffset = _cameraTarget - Mission.MainAgent.Position;
+            var cameraOffset = new Vec3(0f, -_cameraHeight * CameraTiltFactor, _cameraHeight);
+            Mission.SetCustomCameraTargetLocalOffset(targetOffset);
+            Mission.SetCustomCameraGlobalOffset(cameraOffset);
+            Mission.SetCustomCameraIgnoreCollision(true);
             Mission.SetCameraFrame(ref frame, 0f);
+        }
+
+        private void StorePreviousCameraState()
+        {
+            _previousCustomCameraTargetLocalOffset = Mission.CustomCameraTargetLocalOffset;
+            _previousCustomCameraLocalOffset = Mission.CustomCameraLocalOffset;
+            _previousCustomCameraLocalOffset2 = Mission.CustomCameraLocalOffset2;
+            _previousCustomCameraGlobalOffset = Mission.CustomCameraGlobalOffset;
+            _previousCustomCameraLocalRotationalOffset = Mission.CustomCameraLocalRotationalOffset;
+            _previousCustomCameraIgnoreCollision = Mission.CustomCameraIgnoreCollision;
+            _previousCustomCameraFixedDistance = Mission.CustomCameraFixedDistance;
+            _previousCustomCameraFovMultiplier = Mission.CustomCameraFovMultiplier;
+        }
+
+        private void RestorePreviousCameraState()
+        {
+            Mission.SetCustomCameraTargetLocalOffset(_previousCustomCameraTargetLocalOffset);
+            Mission.SetCustomCameraLocalOffset(_previousCustomCameraLocalOffset);
+            Mission.SetCustomCameraLocalOffset2(_previousCustomCameraLocalOffset2);
+            Mission.SetCustomCameraGlobalOffset(_previousCustomCameraGlobalOffset);
+            Mission.SetCustomCameraLocalRotationalOffset(_previousCustomCameraLocalRotationalOffset);
+            Mission.SetCustomCameraIgnoreCollision(_previousCustomCameraIgnoreCollision);
+            Mission.SetCustomCameraFixedDistance(_previousCustomCameraFixedDistance);
+            Mission.SetCustomCameraFovMultiplier(_previousCustomCameraFovMultiplier);
+
+            if (!Mission.MissionEnded && !Mission.MissionIsEnding)
+            {
+                Mission.SetCameraFrame(ref _previousCameraFrame, 0f);
+            }
+        }
+
+        private static bool SafeCanShootAtPoint(RangedSiegeWeapon weapon, Vec3 target)
+        {
+            try
+            {
+                return weapon != null && target.IsValid && weapon.CanShootAtPoint(target);
+            }
+            catch (Exception ex)
+            {
+                SubModule.Log($"Artillery CanShootAtPoint failed: {ex}");
+                return false;
+            }
+        }
+
+        private static bool SafeAimAtTarget(RangedSiegeWeapon weapon, Vec3 target)
+        {
+            try
+            {
+                return weapon != null && target.IsValid && weapon.AimAtTarget(target);
+            }
+            catch (Exception ex)
+            {
+                SubModule.Log($"Artillery AimAtTarget failed: {ex}");
+                return false;
+            }
+        }
+
+        private static bool SafeCheckIsTargetReached(RangedSiegeWeapon weapon, Vec3 target)
+        {
+            try
+            {
+                return weapon != null && target.IsValid && weapon.CheckIsTargetReached(target);
+            }
+            catch (Exception ex)
+            {
+                SubModule.Log($"Artillery CheckIsTargetReached failed: {ex}");
+                return false;
+            }
         }
 
         private void RenderAimPreview()
@@ -567,7 +664,7 @@ namespace TOR_EngineerCareer
         {
             MBDebug.RenderDebugText(0.035f, 0.78f, "ENGINEER ARTILLERY CONTROL", PanelColor, 0.95f);
             var pending = _pendingFireWeapon == null ? string.Empty : " | LINING UP";
-            MBDebug.RenderDebugText(0.035f, 0.815f, $"O/Esc: exit | LMB: fire | Aim: {_aimState}{pending}", PanelColor, 0.8f);
+            MBDebug.RenderDebugText(0.035f, 0.815f, $"Alt+X/Esc: exit | LMB: fire | Aim: {_aimState}{pending}", PanelColor, 0.8f);
 
             var y = 0.85f;
             for (var i = 0; i < _playerArtillery.Count; i++)
@@ -598,8 +695,8 @@ namespace TOR_EngineerCareer
             _viewModel.AimState = _aimState.ToString();
             _viewModel.ArtillerySummary = BuildArtillerySummary();
             _viewModel.StatusText = _isControlModeActive
-                ? "O/Esc exits. LMB fires one ready gun."
-                : "O opens artillery control when deployed artillery is available.";
+                ? "Alt+X/Esc exits. LMB fires one ready gun."
+                : "Alt+X opens artillery control when deployed artillery is available.";
         }
 
         private string BuildArtillerySummary()
