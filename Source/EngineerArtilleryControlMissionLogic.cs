@@ -42,6 +42,10 @@ namespace TOR_EngineerCareer
 
         private bool _isControlModeActive;
         private bool _wasObjectInteractionEnabled = true;
+        private bool _wasItemInteractionEnabled = true;
+        private bool _wasMainAgentItemUseDisabled;
+        private Agent.MovementControlFlag _previousMovementFlags = Agent.MovementControlFlag.None;
+        private Vec2 _previousMovementInputVector = Vec2.Zero;
         private int _nextWeaponIndex;
         private float _cameraHeight = InitialCameraHeight;
         private Vec3 _cameraTarget = Vec3.Zero;
@@ -107,6 +111,7 @@ namespace TOR_EngineerCareer
                 }
 
                 UpdateCameraTarget(dt);
+                BlockMainAgentControl();
                 UpdateAimTargetFromMouse();
                 UpdateAimState();
                 ProcessPendingFire();
@@ -214,8 +219,13 @@ namespace TOR_EngineerCareer
             _isControlModeActive = true;
             _previousCameraFrame = Mission.GetCameraFrame();
             _wasObjectInteractionEnabled = Mission.IsMainAgentObjectInteractionEnabled;
+            _wasItemInteractionEnabled = Mission.IsMainAgentItemInteractionEnabled;
+            _wasMainAgentItemUseDisabled = mainAgent?.IsItemUseDisabled == true;
+            _previousMovementFlags = mainAgent?.MovementFlags ?? Agent.MovementControlFlag.None;
+            _previousMovementInputVector = mainAgent?.MovementInputVector ?? Vec2.Zero;
             StorePreviousCameraState();
             Mission.IsMainAgentObjectInteractionEnabled = false;
+            Mission.IsMainAgentItemInteractionEnabled = false;
             Mission.SetCustomCameraIgnoreCollision(true);
 
             _cameraHeight = InitialCameraHeight;
@@ -239,6 +249,8 @@ namespace TOR_EngineerCareer
             if (Mission != null)
             {
                 Mission.IsMainAgentObjectInteractionEnabled = _wasObjectInteractionEnabled;
+                Mission.IsMainAgentItemInteractionEnabled = _wasItemInteractionEnabled;
+                RestoreMainAgentControl();
                 RestorePreviousCameraState();
             }
 
@@ -347,6 +359,37 @@ namespace TOR_EngineerCareer
             {
                 _cameraHeight = MBMath.ClampFloat(_cameraHeight - scroll * 8f, MinCameraHeight, MaxCameraHeight);
             }
+        }
+
+        private void BlockMainAgentControl()
+        {
+            var mainAgent = Mission?.MainAgent;
+            if (mainAgent == null || !mainAgent.IsActive())
+            {
+                return;
+            }
+
+            var zeroMovement = Vec2.Zero;
+            mainAgent.IsItemUseDisabled = true;
+            mainAgent.MovementInputVector = zeroMovement;
+            mainAgent.MovementFlags = Agent.MovementControlFlag.None;
+            mainAgent.SetMovementDirection(in zeroMovement);
+            mainAgent.SetAttackState(0);
+            mainAgent.ResetGuard();
+            mainAgent.EventControlFlags = Agent.EventControlFlag.None;
+        }
+
+        private void RestoreMainAgentControl()
+        {
+            var mainAgent = Mission?.MainAgent;
+            if (mainAgent == null || !mainAgent.IsActive())
+            {
+                return;
+            }
+
+            mainAgent.IsItemUseDisabled = _wasMainAgentItemUseDisabled;
+            mainAgent.MovementInputVector = _previousMovementInputVector;
+            mainAgent.MovementFlags = _previousMovementFlags;
         }
 
         private void UpdateAimTargetFromMouse()
