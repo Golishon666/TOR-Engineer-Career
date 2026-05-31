@@ -38,6 +38,7 @@ namespace TOR_EngineerCareer
         private static readonly InputKey ToggleControlKey = InputKey.X;
         private static readonly InputKey FireKey = InputKey.LeftMouseButton;
         private static readonly FieldInfo AiRequestsShootField = typeof(RangedSiegeWeapon).GetField("_aiRequestsShoot", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly MethodInfo CalculateLocalAimMethod = typeof(RangedSiegeWeapon).GetMethod("CalculateLocalDirectionAndLocalAngleToShootTarget", BindingFlags.Instance | BindingFlags.NonPublic);
 
         private readonly HashSet<MissionObject> _initialMissionObjects = new();
         private readonly List<RangedSiegeWeapon> _playerArtillery = new();
@@ -56,6 +57,8 @@ namespace TOR_EngineerCareer
         private int _nextWeaponIndex;
         private float _cameraHeight = InitialCameraHeight;
         private Vec3 _cameraTarget = Vec3.Zero;
+        private Vec3 _cameraForward = new(0f, 1f, 0f);
+        private Vec3 _cameraRight = new(1f, 0f, 0f);
         private Vec3 _aimTarget = Vec3.Invalid;
         private Vec3 _pendingFireTarget = Vec3.Invalid;
         private GameEntity _overlayEntity;
@@ -108,6 +111,11 @@ namespace TOR_EngineerCareer
             }
 
             RefreshArtilleryList();
+            if (_isControlModeActive)
+            {
+                BlockMainAgentControl(true);
+            }
+
             HandleInput(dt);
 
             if (_isControlModeActive)
@@ -119,7 +127,7 @@ namespace TOR_EngineerCareer
                 }
 
                 UpdateCameraTarget(dt);
-                BlockMainAgentControl();
+                BlockMainAgentControl(true);
                 UpdateAimTargetFromMouse();
                 SuppressPlayerArtilleryAutoFire();
                 UpdateAimState();
@@ -137,6 +145,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
+            BlockMainAgentControl(true);
             UpdateHighlights();
             RenderAimPreview();
             RenderControlPanel();
@@ -243,6 +252,7 @@ namespace TOR_EngineerCareer
 
             _cameraHeight = InitialCameraHeight;
             _cameraTarget = mainAgent?.Position ?? Vec3.Zero;
+            UpdateCameraBasisTowardEnemy();
             _aimTarget = _cameraTarget;
             UpdateAimState();
             ApplyControlCamera();
@@ -387,22 +397,22 @@ namespace TOR_EngineerCareer
             var move = Vec3.Zero;
             if (input.IsKeyDown(InputKey.W) || input.IsKeyDown(InputKey.Up) || input.IsKeyDown(InputKey.Numpad8))
             {
-                move.x += 1f;
+                move += _cameraForward;
             }
 
             if (input.IsKeyDown(InputKey.S) || input.IsKeyDown(InputKey.Down) || input.IsKeyDown(InputKey.Numpad2))
             {
-                move.x -= 1f;
+                move -= _cameraForward;
             }
 
             if (input.IsKeyDown(InputKey.D) || input.IsKeyDown(InputKey.Right) || input.IsKeyDown(InputKey.Numpad6))
             {
-                move.y -= 1f;
+                move += _cameraRight;
             }
 
             if (input.IsKeyDown(InputKey.A) || input.IsKeyDown(InputKey.Left) || input.IsKeyDown(InputKey.Numpad4))
             {
-                move.y += 1f;
+                move -= _cameraRight;
             }
 
             if (move.LengthSquared > 0.01f)
@@ -431,6 +441,7 @@ namespace TOR_EngineerCareer
             mainAgent.MovementInputVector = zeroMovement;
             mainAgent.MovementFlags = Agent.MovementControlFlag.None;
             mainAgent.SetMovementDirection(in zeroMovement);
+            mainAgent.SetTargetPosition(new Vec2(mainAgent.Position.x, mainAgent.Position.y));
             mainAgent.SetAttackState(0);
             mainAgent.ResetGuard();
             mainAgent.EventControlFlags = Agent.EventControlFlag.None;
@@ -496,7 +507,7 @@ namespace TOR_EngineerCareer
 
             var xOffset = (pointer.x - 0.5f) * worldWidth;
             var yOffset = (0.5f - pointer.y) * worldDepth;
-            var target = _cameraTarget + new Vec3(xOffset, yOffset, 0f);
+            var target = _cameraTarget + (_cameraRight * xOffset) + (_cameraForward * yOffset);
 
             var height = Mission.Scene.GetGroundHeightAtPosition(target, BodyFlags.CommonCollisionExcludeFlags);
             target.z = height + 0.05f;
@@ -519,12 +530,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (!SafeAimAtTarget(weapon, _aimTarget))
-            {
-                _aimState = AimState.Blocked;
-                return;
-            }
-
+            SafeAimAtTarget(weapon, _aimTarget);
             _aimState = AimState.Valid;
         }
 
@@ -549,13 +555,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (!SafeAimAtTarget(weapon, _aimTarget))
-            {
-                _aimState = AimState.Blocked;
-                ShowMessage("The selected artillery cannot reach that point.");
-                return;
-            }
-
+            SafeAimAtTarget(weapon, _aimTarget);
             _pendingFireWeapon = weapon;
             _pendingFireTarget = _aimTarget;
             _pendingFireElapsed = 0f;
@@ -578,13 +578,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            if (!SafeAimAtTarget(_pendingFireWeapon, _pendingFireTarget))
-            {
-                ClearPendingFire();
-                _aimState = AimState.Blocked;
-                ShowMessage("Artillery cannot line up that shot.");
-                return;
-            }
+            SafeAimAtTarget(_pendingFireWeapon, _pendingFireTarget);
 
             if (!SafeCheckIsTargetReached(_pendingFireWeapon, _pendingFireTarget) &&
                 _pendingFireElapsed < PendingAimTimeout)
@@ -668,16 +662,60 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            var cameraPosition = _cameraTarget + new Vec3(0f, -_cameraHeight * CameraTiltFactor, _cameraHeight);
+            var cameraPosition = _cameraTarget - (_cameraForward * _cameraHeight * CameraTiltFactor) + new Vec3(0f, 0f, _cameraHeight);
             var lookAt = _cameraTarget;
             var up = Vec3.Up;
             var frame = MatrixFrame.CreateLookAt(in cameraPosition, in lookAt, in up);
             var targetOffset = _cameraTarget - Mission.MainAgent.Position;
-            var cameraOffset = new Vec3(0f, -_cameraHeight * CameraTiltFactor, _cameraHeight);
+            var cameraOffset = -(_cameraForward * _cameraHeight * CameraTiltFactor) + new Vec3(0f, 0f, _cameraHeight);
             Mission.SetCustomCameraTargetLocalOffset(targetOffset);
             Mission.SetCustomCameraGlobalOffset(cameraOffset);
             Mission.SetCustomCameraIgnoreCollision(true);
             Mission.SetCameraFrame(ref frame, 0f);
+        }
+
+        private void UpdateCameraBasisTowardEnemy()
+        {
+            var mainAgent = Mission?.MainAgent;
+            if (mainAgent?.Team == null || Mission?.Agents == null)
+            {
+                return;
+            }
+
+            var enemyCenter = Vec3.Zero;
+            var enemyCount = 0;
+            foreach (var agent in Mission.Agents)
+            {
+                if (agent == null ||
+                    !agent.IsHuman ||
+                    !agent.IsActive() ||
+                    agent.Team == null ||
+                    agent.Team.Side == mainAgent.Team.Side)
+                {
+                    continue;
+                }
+
+                enemyCenter += agent.Position;
+                enemyCount++;
+            }
+
+            if (enemyCount <= 0)
+            {
+                return;
+            }
+
+            enemyCenter *= 1f / enemyCount;
+            var forward = enemyCenter - mainAgent.Position;
+            forward.z = 0f;
+            if (forward.LengthSquared < 0.01f)
+            {
+                return;
+            }
+
+            forward.Normalize();
+            _cameraForward = forward;
+            _cameraRight = new Vec3(_cameraForward.y, -_cameraForward.x, 0f);
+            _cameraRight.Normalize();
         }
 
         private void StorePreviousCameraState()
@@ -726,11 +764,42 @@ namespace TOR_EngineerCareer
         {
             try
             {
-                return weapon != null && target.IsValid && weapon.AimAtTarget(target);
+                if (weapon == null || !target.IsValid)
+                {
+                    return false;
+                }
+
+                if (weapon.AimAtTarget(target))
+                {
+                    return true;
+                }
+
+                return SafeAimAtTargetByRotation(weapon, target);
             }
             catch (Exception ex)
             {
                 SubModule.Log($"Artillery AimAtTarget failed: {ex}");
+                return false;
+            }
+        }
+
+        private static bool SafeAimAtTargetByRotation(RangedSiegeWeapon weapon, Vec3 target)
+        {
+            if (CalculateLocalAimMethod == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                var parameters = new object[] { target, 0f, 0f };
+                CalculateLocalAimMethod.Invoke(weapon, parameters);
+                weapon.AimAtRotation((float)parameters[1], (float)parameters[2]);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                SubModule.Log($"Artillery AimAtRotation fallback failed: {ex}");
                 return false;
             }
         }
