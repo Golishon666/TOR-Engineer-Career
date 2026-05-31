@@ -482,17 +482,16 @@ namespace TOR_EngineerCareer
             }
 
             var color = _aimState == AimState.Valid ? ValidColor : BlockedColor;
-            RenderTrajectory(GetWeaponOrigin(weapon), _aimTarget, color);
+            RenderTrajectory(weapon, GetWeaponOrigin(weapon), _aimTarget, color);
             RenderImpactCircle(_aimTarget, ImpactRadius, color);
             MBDebug.RenderDebugSphere(_aimTarget + new Vec3(0f, 0f, 0.35f), 0.45f, color, false, 0f);
         }
 
-        private void RenderTrajectory(Vec3 origin, Vec3 target, uint color)
+        private void RenderTrajectory(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target, uint color)
         {
             const int segments = 24;
             var last = origin;
-            var distance = origin.Distance(target);
-            var arcHeight = MBMath.ClampFloat(distance * 0.18f, 8f, 45f);
+            var arcHeight = GetTrajectoryArcHeight(weapon, origin, target);
 
             for (var i = 1; i <= segments; i++)
             {
@@ -502,6 +501,46 @@ namespace TOR_EngineerCareer
                 MBDebug.RenderDebugLine(last, point, color, false, 0f);
                 last = point;
             }
+        }
+
+        private float GetTrajectoryArcHeight(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target)
+        {
+            var distance = origin.Distance(target);
+            if (IsHighArcArtillery(weapon))
+            {
+                return MBMath.ClampFloat(distance * 0.55f, 18f, 140f);
+            }
+
+            var releaseAngle = 0f;
+            try
+            {
+                releaseAngle = Math.Abs(weapon.GetTargetReleaseAngle(target));
+            }
+            catch
+            {
+                releaseAngle = 0f;
+            }
+
+            if (releaseAngle > MathF.PI)
+            {
+                releaseAngle *= MathF.DegToRad;
+            }
+
+            var angleFactor = MBMath.ClampFloat(MathF.Sin(releaseAngle), 0.12f, 0.75f);
+            return MBMath.ClampFloat(distance * (0.10f + angleFactor * 0.28f), 8f, 90f);
+        }
+
+        private static bool IsHighArcArtillery(RangedSiegeWeapon weapon)
+        {
+            var engineType = weapon?.GetSiegeEngineType();
+            var id = engineType?.StringId ?? string.Empty;
+            var name = engineType?.Name?.ToString() ?? string.Empty;
+            var text = (id + " " + name).ToLowerInvariant();
+
+            return text.Contains("mortar") ||
+                   text.Contains("mortir") ||
+                   text.Contains("mangonel") ||
+                   text.Contains("trebuchet");
         }
 
         private void RenderImpactCircle(Vec3 center, float radius, uint color)
