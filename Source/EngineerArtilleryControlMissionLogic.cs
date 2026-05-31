@@ -82,6 +82,7 @@ namespace TOR_EngineerCareer
         {
             NoTarget,
             Valid,
+            Aligning,
             Blocked,
             OutOfRange
         }
@@ -582,22 +583,28 @@ namespace TOR_EngineerCareer
 
         private void UpdateAimState()
         {
-            var weapon = GetNextCommandableWeapon();
-            if (weapon == null || !_aimTarget.IsValid)
+            var weapon = _pendingFireWeapon ?? GetNextCommandableWeapon();
+            var target = _pendingFireWeapon != null && _pendingFireTarget.IsValid ? _pendingFireTarget : _aimTarget;
+            if (weapon == null || !target.IsValid)
             {
                 _aimState = AimState.NoTarget;
                 return;
             }
 
             var origin = GetWeaponOrigin(weapon);
-            if (origin.Distance(_aimTarget) > MaxCommandRange)
+            if (origin.Distance(target) > MaxCommandRange)
             {
                 _aimState = AimState.OutOfRange;
                 return;
             }
 
-            SafeAimAtTarget(weapon, _aimTarget);
-            _aimState = AimState.Valid;
+            if (!SafeAimAtTarget(weapon, target))
+            {
+                _aimState = AimState.Blocked;
+                return;
+            }
+
+            _aimState = SafeCheckIsTargetReached(weapon, target) ? AimState.Valid : AimState.Aligning;
         }
 
         private void TryFireNextReadyWeapon()
@@ -648,6 +655,7 @@ namespace TOR_EngineerCareer
 
             if (!SafeCheckIsTargetReached(_pendingFireWeapon, _pendingFireTarget))
             {
+                _aimState = AimState.Aligning;
                 if (_pendingFireElapsed >= PendingAimTimeout)
                 {
                     ClearPendingFire();
@@ -902,8 +910,9 @@ namespace TOR_EngineerCareer
         private void RenderAimPreview()
         {
             ClearOverlayMesh();
-            var weapon = GetNextCommandableWeapon();
-            if (weapon == null || !_aimTarget.IsValid)
+            var weapon = _pendingFireWeapon ?? GetNextCommandableWeapon();
+            var target = _pendingFireWeapon != null && _pendingFireTarget.IsValid ? _pendingFireTarget : _aimTarget;
+            if (weapon == null || !target.IsValid)
             {
                 return;
             }
@@ -911,8 +920,8 @@ namespace TOR_EngineerCareer
             var color = _aimState == AimState.Valid ? ValidColor : BlockedColor;
             EnsureOverlayEntity();
             PrepareOverlayForColor(color);
-            RenderTrajectory(weapon, GetWeaponOrigin(weapon), _aimTarget, color);
-            RenderImpactCircle(_aimTarget, ImpactRadius, color);
+            RenderTrajectory(weapon, GetWeaponOrigin(weapon), target, color);
+            RenderImpactCircle(target, ImpactRadius, color);
             _overlayMesh?.ComputeNormals();
             _overlayMesh?.UpdateBoundingBox();
             _overlayMesh?.PreloadForRendering();
