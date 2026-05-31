@@ -29,6 +29,41 @@ namespace TOR_EngineerCareer
         }
     }
 
+    [HarmonyPatch(typeof(RangedSiegeWeapon), "SetupProjectileToShoot")]
+    internal static class EngineerArtilleryProjectileDirectionPatch
+    {
+        private static void Postfix(
+            RangedSiegeWeapon __instance,
+            ref Vec3 direction,
+            ref Mat3 orientation,
+            ref float missileBaseSpeed,
+            ref float missileShootingSpeed)
+        {
+            if (!EngineerArtilleryControlMissionLogic.TryGetManualShotTarget(__instance, out var target))
+            {
+                return;
+            }
+
+            var origin = EngineerArtilleryControlMissionLogic.GetWeaponOrigin(__instance);
+            var flat = target - origin;
+            flat.z = 0f;
+            if (flat.LengthSquared < 0.001f)
+            {
+                return;
+            }
+
+            flat.Normalize();
+            var releaseAngle = __instance.GetTargetReleaseAngle(target);
+            var horizontal = MathF.Cos(releaseAngle);
+            var vertical = MathF.Sin(releaseAngle);
+            direction = (flat * horizontal) + new Vec3(0f, 0f, vertical);
+            direction.Normalize();
+            orientation = Mat3.CreateMat3WithForward(in direction);
+
+            missileShootingSpeed = MathF.Max(missileShootingSpeed, missileBaseSpeed);
+        }
+    }
+
     [HarmonyPatch(typeof(TORAgentApplyDamageModel), nameof(TORAgentApplyDamageModel.DecideAgentShrugOffBlow))]
     internal static class EngineerRangedStaggerImmunityPatch
     {

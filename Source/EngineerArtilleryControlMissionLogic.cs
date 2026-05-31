@@ -54,6 +54,7 @@ namespace TOR_EngineerCareer
         private readonly EngineerArtilleryControlVM _viewModel;
         private static readonly HashSet<RangedSiegeWeapon> RegisteredPlayerArtillery = new();
         private static readonly HashSet<RangedSiegeWeapon> ManualShotAllowedArtillery = new();
+        private static readonly Dictionary<RangedSiegeWeapon, Vec3> ManualShotTargets = new();
 
         private bool _isControlModeActive;
         private bool _wasObjectInteractionEnabled = true;
@@ -448,6 +449,7 @@ namespace TOR_EngineerCareer
         {
             RegisteredPlayerArtillery.Clear();
             ManualShotAllowedArtillery.Clear();
+            ManualShotTargets.Clear();
         }
 
         internal static bool ShouldBlockShoot(RangedSiegeWeapon weapon)
@@ -471,7 +473,30 @@ namespace TOR_EngineerCareer
             else
             {
                 ManualShotAllowedArtillery.Remove(weapon);
+                ManualShotTargets.Remove(weapon);
             }
+        }
+
+        internal static bool TryGetManualShotTarget(RangedSiegeWeapon weapon, out Vec3 target)
+        {
+            if (weapon != null && ManualShotTargets.TryGetValue(weapon, out target))
+            {
+                return true;
+            }
+
+            target = Vec3.Invalid;
+            return false;
+        }
+
+        internal static Vec3 GetWeaponOrigin(RangedSiegeWeapon weapon)
+        {
+            var projectilePosition = weapon.ProjectileEntityCurrentGlobalPosition;
+            if (projectilePosition.IsValid && projectilePosition.LengthSquared > 0.01f)
+            {
+                return projectilePosition;
+            }
+
+            return weapon.GameEntity.GlobalPosition + new Vec3(0f, 0f, 2f);
         }
 
         private void UpdateCameraTarget(float dt)
@@ -669,20 +694,10 @@ namespace TOR_EngineerCareer
             }
 
             SafeAimAtTarget(_pendingFireWeapon, _pendingFireTarget);
-
-            if (!SafeCheckIsTargetReached(_pendingFireWeapon, _pendingFireTarget))
-            {
-                _aimState = AimState.Aligning;
-                if (_pendingFireElapsed >= PendingAimTimeout)
-                {
-                    ClearPendingFire();
-                    ShowMessage("Artillery cannot align exactly with that point.");
-                }
-
-                return;
-            }
+            _aimState = AimState.Valid;
 
             bool didShoot;
+            ManualShotTargets[_pendingFireWeapon] = _pendingFireTarget;
             SetManualShotAllowed(_pendingFireWeapon, true);
             try
             {
@@ -1171,17 +1186,6 @@ namespace TOR_EngineerCareer
                 MBDebug.RenderDebugText(0.035f, y, $"{prefix} Gun {i + 1}: {state} | Ammo {weapon.AmmoCount}", PanelColor, 0.75f);
                 y += 0.028f;
             }
-        }
-
-        private static Vec3 GetWeaponOrigin(RangedSiegeWeapon weapon)
-        {
-            var projectilePosition = weapon.ProjectileEntityCurrentGlobalPosition;
-            if (projectilePosition.IsValid && projectilePosition.LengthSquared > 0.01f)
-            {
-                return projectilePosition;
-            }
-
-            return weapon.GameEntity.GlobalPosition + new Vec3(0f, 0f, 2f);
         }
 
         private void UpdateHighlights()
