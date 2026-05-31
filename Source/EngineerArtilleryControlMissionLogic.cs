@@ -300,6 +300,11 @@ namespace TOR_EngineerCareer
                 }
             }
 
+            foreach (var weapon in _playerArtillery)
+            {
+                DisablePlayerArtilleryAI(weapon);
+            }
+
             if (_nextWeaponIndex >= _playerArtillery.Count)
             {
                 _nextWeaponIndex = 0;
@@ -332,6 +337,64 @@ namespace TOR_EngineerCareer
         {
             return IsUsablePlayerArtillery(weapon) &&
                    weapon.State == RangedSiegeWeapon.WeaponState.Idle;
+        }
+
+        private void DisablePlayerArtilleryAI(RangedSiegeWeapon weapon)
+        {
+            if (weapon == null)
+            {
+                return;
+            }
+
+            try
+            {
+                weapon.SetIsDisabledForAI(true);
+                weapon.SetPlayerForceUse(false);
+                ReleaseAIAgentsFromWeapon(weapon);
+            }
+            catch (Exception ex)
+            {
+                SubModule.Log($"Failed to disable AI for engineer artillery: {ex}");
+            }
+        }
+
+        private void ReleaseAIAgentsFromWeapon(RangedSiegeWeapon weapon)
+        {
+            var mainAgent = Mission?.MainAgent;
+            if (weapon?.StandingPoints == null)
+            {
+                return;
+            }
+
+            foreach (var standingPoint in weapon.StandingPoints)
+            {
+                var userAgent = standingPoint?.UserAgent;
+                ReleaseAIAgentFromWeapon(weapon, userAgent, mainAgent);
+
+                var movingAgentCount = standingPoint?.GetMovingAgentCount() ?? 0;
+                for (var i = movingAgentCount - 1; i >= 0; i--)
+                {
+                    ReleaseAIAgentFromWeapon(weapon, standingPoint.GetMovingAgentWithIndex(i), mainAgent);
+                }
+            }
+        }
+
+        private static void ReleaseAIAgentFromWeapon(RangedSiegeWeapon weapon, Agent agent, Agent mainAgent)
+        {
+            if (agent == null || agent == mainAgent)
+            {
+                return;
+            }
+
+            try
+            {
+                agent.StopUsingGameObject(false, Agent.StopUsingGameObjectFlags.DoNotWieldWeaponAfterStoppingUsingGameObject);
+                ((IDetachment)weapon).RemoveAgent(agent);
+            }
+            catch (Exception ex)
+            {
+                SubModule.Log($"Failed to release AI artillery user: {ex}");
+            }
         }
 
         private void UpdateCameraTarget(float dt)
@@ -458,7 +521,7 @@ namespace TOR_EngineerCareer
 
         private void UpdateAimState()
         {
-            var weapon = GetNextReadyWeapon();
+            var weapon = GetNextCommandableWeapon();
             if (weapon == null || !_aimTarget.IsValid)
             {
                 _aimState = AimState.NoTarget;
@@ -585,6 +648,26 @@ namespace TOR_EngineerCareer
             return null;
         }
 
+        private RangedSiegeWeapon GetNextCommandableWeapon()
+        {
+            if (_playerArtillery.Count == 0)
+            {
+                return null;
+            }
+
+            for (var i = 0; i < _playerArtillery.Count; i++)
+            {
+                var index = (_nextWeaponIndex + i) % _playerArtillery.Count;
+                var weapon = _playerArtillery[index];
+                if (IsUsablePlayerArtillery(weapon))
+                {
+                    return weapon;
+                }
+            }
+
+            return null;
+        }
+
         private void AdvanceWeaponIndexAfter(RangedSiegeWeapon weapon)
         {
             var index = _playerArtillery.IndexOf(weapon);
@@ -684,7 +767,7 @@ namespace TOR_EngineerCareer
         private void RenderAimPreview()
         {
             ClearOverlayMesh();
-            var weapon = GetNextReadyWeapon();
+            var weapon = GetNextCommandableWeapon();
             if (weapon == null || !_aimTarget.IsValid)
             {
                 return;
