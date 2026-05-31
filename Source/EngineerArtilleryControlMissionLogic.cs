@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.Engine;
@@ -36,6 +37,7 @@ namespace TOR_EngineerCareer
         private static readonly InputKey ToggleControlModifierKey = InputKey.LeftAlt;
         private static readonly InputKey ToggleControlKey = InputKey.X;
         private static readonly InputKey FireKey = InputKey.LeftMouseButton;
+        private static readonly FieldInfo AiRequestsShootField = typeof(RangedSiegeWeapon).GetField("_aiRequestsShoot", BindingFlags.Instance | BindingFlags.NonPublic);
 
         private readonly HashSet<MissionObject> _initialMissionObjects = new();
         private readonly List<RangedSiegeWeapon> _playerArtillery = new();
@@ -119,8 +121,10 @@ namespace TOR_EngineerCareer
                 UpdateCameraTarget(dt);
                 BlockMainAgentControl();
                 UpdateAimTargetFromMouse();
+                SuppressPlayerArtilleryAutoFire();
                 UpdateAimState();
                 ProcessPendingFire(dt);
+                SuppressPlayerArtilleryAutoFire();
             }
 
             RefreshViewModel();
@@ -302,7 +306,7 @@ namespace TOR_EngineerCareer
 
             foreach (var weapon in _playerArtillery)
             {
-                DisablePlayerArtilleryAI(weapon);
+                EnablePlayerArtilleryAI(weapon);
             }
 
             if (_nextWeaponIndex >= _playerArtillery.Count)
@@ -339,7 +343,7 @@ namespace TOR_EngineerCareer
                    weapon.State == RangedSiegeWeapon.WeaponState.Idle;
         }
 
-        private void DisablePlayerArtilleryAI(RangedSiegeWeapon weapon)
+        private static void EnablePlayerArtilleryAI(RangedSiegeWeapon weapon)
         {
             if (weapon == null)
             {
@@ -348,52 +352,32 @@ namespace TOR_EngineerCareer
 
             try
             {
-                weapon.SetIsDisabledForAI(true);
+                weapon.SetIsDisabledForAI(false);
                 weapon.SetPlayerForceUse(false);
-                ReleaseAIAgentsFromWeapon(weapon);
             }
             catch (Exception ex)
             {
-                SubModule.Log($"Failed to disable AI for engineer artillery: {ex}");
+                SubModule.Log($"Failed to enable AI for engineer artillery: {ex}");
             }
         }
 
-        private void ReleaseAIAgentsFromWeapon(RangedSiegeWeapon weapon)
+        private void SuppressPlayerArtilleryAutoFire()
         {
-            var mainAgent = Mission?.MainAgent;
-            if (weapon?.StandingPoints == null)
+            if (AiRequestsShootField == null)
             {
                 return;
             }
 
-            foreach (var standingPoint in weapon.StandingPoints)
+            foreach (var weapon in _playerArtillery)
             {
-                var userAgent = standingPoint?.UserAgent;
-                ReleaseAIAgentFromWeapon(weapon, userAgent, mainAgent);
-
-                var movingAgentCount = standingPoint?.GetMovingAgentCount() ?? 0;
-                for (var i = movingAgentCount - 1; i >= 0; i--)
+                try
                 {
-                    ReleaseAIAgentFromWeapon(weapon, standingPoint.GetMovingAgentWithIndex(i), mainAgent);
+                    AiRequestsShootField.SetValue(weapon, false);
                 }
-            }
-        }
-
-        private static void ReleaseAIAgentFromWeapon(RangedSiegeWeapon weapon, Agent agent, Agent mainAgent)
-        {
-            if (agent == null || agent == mainAgent)
-            {
-                return;
-            }
-
-            try
-            {
-                agent.StopUsingGameObject(false, Agent.StopUsingGameObjectFlags.DoNotWieldWeaponAfterStoppingUsingGameObject);
-                ((IDetachment)weapon).RemoveAgent(agent);
-            }
-            catch (Exception ex)
-            {
-                SubModule.Log($"Failed to release AI artillery user: {ex}");
+                catch (Exception ex)
+                {
+                    SubModule.Log($"Failed to suppress AI artillery shot: {ex}");
+                }
             }
         }
 
