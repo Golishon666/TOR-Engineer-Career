@@ -224,6 +224,8 @@ namespace TOR_EngineerCareer
             }
 
             hero.AddCareer(EngineerCareerRegistry.Engineer);
+            EngineerCareerHelper.EnsureDefaultArtilleryStock(hero);
+
             var gunpowderSkill = EngineerCareerHelper.GetGunpowderSkill();
             if (gunpowderSkill == null)
             {
