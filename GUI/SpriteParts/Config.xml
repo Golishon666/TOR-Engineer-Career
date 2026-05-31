@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Config>
+  <SpriteCategory Name="ui_tor_engineer_career">
+    <AlwaysLoad />
+  </SpriteCategory>
+  <SpriteCategory Name="ui_tor_engineer_ability">
+    <AlwaysLoad />
+  </SpriteCategory>
+</Config>

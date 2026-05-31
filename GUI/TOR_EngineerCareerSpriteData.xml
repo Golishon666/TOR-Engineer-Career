@@ -18,8 +18,8 @@
       <Name>engineer_open_fire_icon</Name>
       <Width>256</Width>
       <Height>256</Height>
-      <SheetX>4</SheetX>
-      <SheetY>4</SheetY>
+      <SheetX>0</SheetX>
+      <SheetY>0</SheetY>
       <CategoryName>ui_tor_engineer_ability</CategoryName>
     </SpritePart>
     <SpritePart>
@@ -27,8 +27,8 @@
       <Name>engineer_artillery_barrage_icon</Name>
       <Width>256</Width>
       <Height>256</Height>
-      <SheetX>260</SheetX>
-      <SheetY>4</SheetY>
+      <SheetX>256</SheetX>
+      <SheetY>0</SheetY>
       <CategoryName>ui_tor_engineer_ability</CategoryName>
     </SpritePart>
     <SpritePart>
