@@ -29,7 +29,7 @@ namespace TOR_EngineerCareer
         private const float ImpactCircleVisualLift = 0.75f;
         private const float PendingAimTimeout = 4f;
         private const float ManualProjectileGravity = 9.81f;
-        private const float MinimumManualProjectileSpeed = 35f;
+        private const float MinimumManualProjectileSpeed = 90f;
         private const uint ValidColor = 0xFF20FF40;
         private const uint BlockedColor = 0xFFFF3030;
         private const uint AllyContourColor = 0xFF35B6FF;
@@ -486,6 +486,20 @@ namespace TOR_EngineerCareer
                 return true;
             }
 
+            target = Vec3.Invalid;
+            return false;
+        }
+
+        internal static bool TryGetAnyManualShotTarget(out RangedSiegeWeapon weapon, out Vec3 target)
+        {
+            foreach (var entry in ManualShotTargets)
+            {
+                weapon = entry.Key;
+                target = entry.Value;
+                return true;
+            }
+
+            weapon = null;
             target = Vec3.Invalid;
             return false;
         }
@@ -1016,8 +1030,20 @@ namespace TOR_EngineerCareer
             out float speed,
             out float flightTime)
         {
+            return TryGetManualBallisticShot(weapon, origin, target, 0f, out direction, out speed, out flightTime);
+        }
+
+        internal static bool TryGetManualBallisticShot(
+            RangedSiegeWeapon weapon,
+            Vec3 origin,
+            Vec3 target,
+            float preferredSpeed,
+            out Vec3 direction,
+            out float speed,
+            out float flightTime)
+        {
             direction = Vec3.Forward;
-            speed = MathF.Max(GetReflectedShootingSpeed(weapon), MinimumManualProjectileSpeed);
+            speed = MathF.Max(MathF.Max(preferredSpeed, GetReflectedShootingSpeed(weapon)), MinimumManualProjectileSpeed);
             flightTime = 0f;
 
             var delta = target - origin;
@@ -1279,10 +1305,55 @@ namespace TOR_EngineerCareer
             {
                 var weapon = _playerArtillery[i];
                 var prefix = i == _nextWeaponIndex ? ">" : " ";
-                var state = IsReadyToFire(weapon) ? "READY" : weapon.State.ToString();
-                MBDebug.RenderDebugText(0.035f, y, $"{prefix} Gun {i + 1}: {state} | Ammo {weapon.AmmoCount}", PanelColor, 0.75f);
+                var reloadProgress = GetReloadProgress(weapon);
+                var reloadBar = BuildProgressBar(reloadProgress);
+                var state = GetReloadStateText(weapon);
+                MBDebug.RenderDebugText(0.035f, y, $"{prefix} Gun {i + 1}: {state} {reloadBar} {reloadProgress:0}% | Ammo {weapon.AmmoCount}", PanelColor, 0.75f);
                 y += 0.028f;
             }
+        }
+
+        private static string GetReloadStateText(RangedSiegeWeapon weapon)
+        {
+            if (weapon == null || weapon.AmmoCount <= 0)
+            {
+                return "EMPTY";
+            }
+
+            return IsReadyToFire(weapon) ? "READY" : weapon.State.ToString().ToUpperInvariant();
+        }
+
+        private static int GetReloadProgress(RangedSiegeWeapon weapon)
+        {
+            if (weapon == null || weapon.AmmoCount <= 0)
+            {
+                return 0;
+            }
+
+            if (IsReadyToFire(weapon))
+            {
+                return 100;
+            }
+
+            return weapon.State switch
+            {
+                RangedSiegeWeapon.WeaponState.WaitingBeforeProjectileLeaving => 0,
+                RangedSiegeWeapon.WeaponState.Shooting => 5,
+                RangedSiegeWeapon.WeaponState.WaitingAfterShooting => 15,
+                RangedSiegeWeapon.WeaponState.WaitingBeforeReloading => 25,
+                RangedSiegeWeapon.WeaponState.LoadingAmmo => 45,
+                RangedSiegeWeapon.WeaponState.Reloading => 70,
+                RangedSiegeWeapon.WeaponState.ReloadingPaused => 70,
+                RangedSiegeWeapon.WeaponState.WaitingBeforeIdle => 90,
+                _ => 0
+            };
+        }
+
+        private static string BuildProgressBar(int progress)
+        {
+            const int width = 10;
+            var filled = MBMath.ClampInt((int)MathF.Round(progress / 100f * width), 0, width);
+            return "[" + new string('#', filled) + new string('-', width - filled) + "]";
         }
 
         private void UpdateHighlights()
@@ -1371,8 +1442,8 @@ namespace TOR_EngineerCareer
 
             return string.Join(" | ", _playerArtillery.Select((weapon, index) =>
             {
-                var state = IsReadyToFire(weapon) ? "Ready" : weapon.State.ToString();
-                return $"{index + 1}:{state}:{weapon.AmmoCount}";
+                var state = GetReloadStateText(weapon);
+                return $"{index + 1}:{state}:{GetReloadProgress(weapon)}%:{weapon.AmmoCount}";
             }));
         }
 

@@ -58,7 +58,8 @@ namespace TOR_EngineerCareer
             try
             {
                 var origin = EngineerArtilleryControlMissionLogic.GetWeaponOrigin(__instance);
-                if (!EngineerArtilleryControlMissionLogic.TryGetManualBallisticShot(__instance, origin, target, out direction, out var manualSpeed, out _))
+                var currentSpeed = MathF.Max(missileBaseSpeed, missileShootingSpeed);
+                if (!EngineerArtilleryControlMissionLogic.TryGetManualBallisticShot(__instance, origin, target, currentSpeed, out direction, out var manualSpeed, out _))
                 {
                     return;
                 }
@@ -71,7 +72,47 @@ namespace TOR_EngineerCareer
             }
             finally
             {
-                EngineerArtilleryControlMissionLogic.ClearManualShotTarget(__instance);
+            }
+        }
+    }
+
+    [HarmonyPatch]
+    internal static class EngineerArtilleryAddMissilePatch
+    {
+        private static IEnumerable<MethodBase> TargetMethods()
+        {
+            yield return AccessTools.Method(typeof(Mission), "AddMissileAux");
+            yield return AccessTools.Method(typeof(Mission), "AddMissileSingleUsageAux");
+        }
+
+        private static void Prefix(
+            ref Vec3 position,
+            ref Vec3 direction,
+            ref Mat3 orientation,
+            ref float baseSpeed,
+            ref float speed)
+        {
+            if (!EngineerArtilleryControlMissionLogic.TryGetAnyManualShotTarget(out var weapon, out var target))
+            {
+                return;
+            }
+
+            try
+            {
+                var currentSpeed = MathF.Max(baseSpeed, speed);
+                if (!EngineerArtilleryControlMissionLogic.TryGetManualBallisticShot(weapon, position, target, currentSpeed, out direction, out var manualSpeed, out _))
+                {
+                    return;
+                }
+
+                direction.Normalize();
+                orientation = Mat3.CreateMat3WithForward(in direction);
+                baseSpeed = MathF.Max(baseSpeed, manualSpeed);
+                speed = MathF.Max(speed, manualSpeed);
+            }
+            finally
+            {
+                EngineerArtilleryControlMissionLogic.ClearManualShotTarget(weapon);
             }
         }
     }
