@@ -4,6 +4,7 @@ using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
+using TOR_Core.CharacterDevelopment.CareerSystem;
 
 namespace TOR_EngineerCareer
 {
@@ -27,26 +28,40 @@ namespace TOR_EngineerCareer
             SafePatch(typeof(EngineerGrenadeAmmoPatch));
             SafePatch(typeof(EngineerBuckshotPatch));
             SafePatch(typeof(EngineerGrenadeExplosionPatch));
+            SafePatch(typeof(EngineerEquipmentUpgradeDamagePatch));
             SafePatch(typeof(EngineerArtilleryBarrageAbilityComponentPatch));
             SafePatch(typeof(EngineerArtilleryBarrageDisabledPatch));
             SafePatch(typeof(EngineerArtilleryBarrageCanCastPatch));
             SafePatch(typeof(EngineerArtilleryBarrageActivatePatch));
+            SafePatch(typeof(EngineerEquipmentUpgradeLoadTraitsPatch));
+            SafePatch(typeof(EngineerEquipmentUpgradeAbilityComponentPatch));
+            SafePatch(typeof(EngineerInventoryGunpowderRestrictionPatch));
             SafePatch(typeof(EngineerDwarfContrabandShopOpenPatch));
             SafePatch(typeof(EngineerDwarfContrabandShopInventoryPatch));
+
+            EngineerEquipmentUpgradeTraits.EnsureRegistered();
         }
 
         protected override void OnGameStart(Game game, IGameStarter gameStarterObject)
         {
+            CareerHelper.RefreshCareerChoicesCache();
+            EngineerCareerHelper.EnsureEngineerGrenadesAreUsable();
+
             if (gameStarterObject is CampaignGameStarter campaignStarter)
             {
                 campaignStarter.AddBehavior(new EngineerDwarfContrabandCampaignBehavior());
+                campaignStarter.AddBehavior(new EngineerEquipmentUpgradeCampaignBehavior());
             }
         }
 
         public override void OnMissionBehaviorInitialize(Mission mission)
         {
+            CareerHelper.RefreshCareerChoicesCache();
+            EngineerCareerHelper.EnsureEngineerGrenadesAreUsable();
+
             mission.AddMissionBehavior(new EngineerCareerMissionLogic());
             mission.AddMissionBehavior(new EngineerArtilleryBarrageMissionLogic());
+            mission.AddMissionBehavior(new EngineerEquipmentUpgradeMissionLogic());
         }
 
         private void SafePatch(Type patchType)

@@ -21,25 +21,8 @@ namespace TOR_EngineerCareer
             "tor_dw_weapon_ammo_musket_ball",
             "tor_dw_weapon_gun_beardling_handgun",
             "tor_dw_weapon_blasting_charges",
-            "tor_dwarf_1h_spanner_001",
-            "tor_dwarf_2h_spanner_001",
-            "tor_dw_weapon_crossbow_001",
-            "tor_dw_weapon_crossbow_002",
             "tor_dw_weapon_gun_handgun_001",
-            "tor_dw_weapon_gun_handgun_002",
-            "tor_dw_head_apprentice_002",
-            "tor_dw_head_apprentice_001",
-            "tor_dw_head_journeyman_001",
-            "tor_dw_shoulder_shoulderpads_apprentice_001",
-            "tor_dw_body_armour_apprentice_001",
-            "tor_dw_body_armour_journeyman_001",
-            "tor_dw_body_armour_engineer_001",
-            "tor_dw_arm_gloves_apprentice_001",
-            "tor_dw_arm_gloves_journeyman_001",
-            "tor_dw_arm_gloves_engineer_001",
-            "tor_dw_leg_boots_apprentice_001",
-            "tor_dw_leg_boots_journeyman_001",
-            "tor_dw_leg_boots_engineer_001"
+            "tor_dw_weapon_gun_handgun_002"
         };
 
         private static readonly string[] Tier2ExtraItemIds =
@@ -47,15 +30,9 @@ namespace TOR_EngineerCareer
             "tor_dw_artillery_cannon_001",
             "tor_dw_weapon_gun_drakefire_pistol",
             "tor_dw_weapon_grenade_hand_grenade",
-            "dwarf_1h_engineer_hammer_001",
-            "dwarf_2h_engineer_hammer_001",
             "tor_dw_gun_grudge_raker_001",
             "tor_dw_weapon_ammo_buckshot",
-            "tor_dw_weapon_crossbow_003",
-            "tor_dw_weapon_crossbow_004",
-            "tor_dw_weapon_gun_handgun_003",
-            "tor_dw_head_engineer_002",
-            "tor_dw_shoulder_shoulderpads_journeyman_001"
+            "tor_dw_weapon_gun_handgun_003"
         };
 
         private static readonly string[] Tier3ExtraItemIds =
@@ -63,9 +40,7 @@ namespace TOR_EngineerCareer
             "tor_dw_gun_dronazgrund",
             "tor_dw_weapon_gun_handgun_004",
             "tor_dw_weapon_gun_trollhammer",
-            "tor_dw_iron_drake_trollhammer_torpedo",
-            "tor_dw_head_engineer_001",
-            "tor_dw_shoulder_shoulderpads_engineer_001"
+            "tor_dw_iron_drake_trollhammer_torpedo"
         };
 
         public static string GetUnlockAttributeId(int tier) => "EngineerDwarfContraband" + tier;
@@ -153,8 +128,18 @@ namespace TOR_EngineerCareer
 
             return items
                 .Where(x => x != null)
+                .Where(IsAllowedContrabandItem)
                 .GroupBy(x => x.StringId)
                 .Select(x => x.First());
+        }
+
+        private static bool IsAllowedContrabandItem(ItemObject item)
+        {
+            return item != null &&
+                   !item.IsMeleeWeapon() &&
+                   !item.IsArmor() &&
+                   item.ItemType != ItemObject.ItemTypeEnum.Crossbow &&
+                   !item.StringId.Contains("crossbow");
         }
 
         private static void AddGunpowderWeapons(List<ItemObject> items)

@@ -50,7 +50,7 @@ namespace TOR_EngineerCareer
             }
 
             _engineerRoot.Initialize(CareerID,
-                $"Firearm damage charges Open Fire! {EngineerCareerHelper.BuildOpenFireDurationText()}",
+                EngineerCareerHelper.BuildOpenFireDescriptionText(),
                 null,
                 true,
                 ChoiceType.Keystone,
@@ -96,7 +96,7 @@ namespace TOR_EngineerCareer
                 MutateStatusAdd("let_them_have_it_range_dmg", 0.15f));
 
             Keystone("RicochetTactics",
-                "Open Fire!: ricochet; 50% detonate.",
+                "Open Fire!: ricochet; 30% detonate.",
                 CombineMutations(
                     MutateAbilityFloat(nameof(AbilityTemplate.Duration), EngineerCareerHelper.RicochetTacticsDurationBonus),
                     MutateTriggeredEffectFloat("apply_let_them_have_it", nameof(TriggeredEffectTemplate.Radius), 2f)));
@@ -106,7 +106,7 @@ namespace TOR_EngineerCareer
                 NoMutations());
 
             Keystone("GrandBattery",
-                "Barrage: +1 max gun, +1 shell/gun.",
+                "Barrage: +1 max gun, +1 shell per gun.",
                 NoMutations());
         }
 
@@ -145,7 +145,7 @@ namespace TOR_EngineerCareer
             Passive("RicochetTactics", 1, "+6 ammo per pouch.", Ammo());
             Passive("RicochetTactics", 2, "+15% ranged resist.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Resistance, new DamageProportionTuple(DamageType.Physical, 15), AttackTypeMask.Ranged));
             Passive("RicochetTactics", 3, "+15% firearm accuracy.", new CareerChoiceObject.PassiveEffect(-15, PassiveEffectType.AccuracyPenalty, true));
-            Passive("RicochetTactics", 4, "Always ricochet; 50% detonate; buckshot +3.", SpecialPassive());
+            Passive("RicochetTactics", 4, "Always ricochet; 30% detonate; buckshot +3.", SpecialPassive());
 
             Passive("IncendiaryFuses", 1, "Barrage: +10% damage, ignite, charge.", SpecialPassive());
             Passive("IncendiaryFuses", 2, "Barrage burn: +2s, double stack.", SpecialPassive());
@@ -154,8 +154,8 @@ namespace TOR_EngineerCareer
 
             Passive("GrandBattery", 1, "Barrage: +2 shells.", SpecialPassive());
             Passive("GrandBattery", 2, "Barrage: +10% damage.", SpecialPassive());
-            Passive("GrandBattery", 3, "Barrage: +impact radius.", SpecialPassive());
-            Passive("GrandBattery", 4, "Barrage: +2 shells, cooldown -5s.", SpecialPassive());
+            Passive("GrandBattery", 3, "Barrage: larger impact radius.", SpecialPassive());
+            Passive("GrandBattery", 4, "Barrage: +2 shells, -5s cooldown.", SpecialPassive());
         }
 
         private static CareerChoiceObject Register(string id)
@@ -275,7 +275,7 @@ namespace TOR_EngineerCareer
                     PropertyName = nameof(AbilityTemplate.TooltipDescription),
                     MutationType = OperationType.Replace,
                     PropertyValue = (choice, originalValue, agent) =>
-                        $"Firearm damage charges Open Fire! {EngineerCareerHelper.BuildOpenFireDurationText()}"
+                        EngineerCareerHelper.BuildOpenFireDescriptionText()
                 }
             };
         }

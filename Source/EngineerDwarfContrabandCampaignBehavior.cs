@@ -41,7 +41,7 @@ namespace TOR_EngineerCareer
                 "tor_engineer_dwarf_contraband_upgrade_1",
                 "tor_engineer_dwarf_contraband_shop",
                 "tor_engineer_dwarf_contraband_upgrade_1_response",
-                TORTextHelper.GetText("tor_engineer_dwarf_contraband_upgrade_1", "For 500{PRESTIGE_ICON} I can smuggle in apprentice-grade Dawi handguns, crossbows and powder."),
+                TORTextHelper.GetText("tor_engineer_dwarf_contraband_upgrade_1", "For 500{PRESTIGE_ICON} I can move Dawi handguns, bullets and blasting charges."),
                 () => !HasTier(1),
                 null,
                 200);
@@ -50,7 +50,7 @@ namespace TOR_EngineerCareer
                 "tor_engineer_dwarf_contraband_upgrade_2",
                 "tor_engineer_dwarf_contraband_shop",
                 "tor_engineer_dwarf_contraband_upgrade_2_response",
-                TORTextHelper.GetText("tor_engineer_dwarf_contraband_upgrade_2", "For another 500{PRESTIGE_ICON} I can move cannon, grudge-rakers and the rest of their gunline, but no drakeguns."),
+                TORTextHelper.GetText("tor_engineer_dwarf_contraband_upgrade_2", "Another 500{PRESTIGE_ICON} opens cannon, hand grenades, grudge-rakers, buckshot and drakefire pistols."),
                 () => !HasTier(2) && HasTier(1),
                 null,
                 200);
@@ -59,7 +59,7 @@ namespace TOR_EngineerCareer
                 "tor_engineer_dwarf_contraband_upgrade_3",
                 "tor_engineer_dwarf_contraband_shop",
                 "tor_engineer_dwarf_contraband_upgrade_3_response",
-                TORTextHelper.GetText("tor_engineer_dwarf_contraband_upgrade_3", "For a final 500{PRESTIGE_ICON} I can secure trollhammers and the last contraband I dare move through Nuln."),
+                TORTextHelper.GetText("tor_engineer_dwarf_contraband_upgrade_3", "A final 500{PRESTIGE_ICON} secures masterwork handguns, Dronazgrund, trollhammers and torpedoes."),
                 () => !HasTier(3) && HasTier(2),
                 null,
                 200);

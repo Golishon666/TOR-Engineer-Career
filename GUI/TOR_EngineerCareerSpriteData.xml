@@ -3,8 +3,10 @@
   <SpriteCategories>
     <SpriteCategory>
       <Name>ui_tor_engineer_ability</Name>
-      <SpriteSheetCount>1</SpriteSheetCount>
+      <SpriteSheetCount>3</SpriteSheetCount>
       <SpriteSheetSize ID="1" Width="512" Height="512" />
+      <SpriteSheetSize ID="2" Width="512" Height="512" />
+      <SpriteSheetSize ID="3" Width="512" Height="512" />
     </SpriteCategory>
     <SpriteCategory>
       <Name>ui_tor_engineer_career</Name>
@@ -33,6 +35,87 @@
     </SpritePart>
     <SpritePart>
       <SheetID>1</SheetID>
+      <Name>engineer_field_medkit_icon</Name>
+      <Width>256</Width>
+      <Height>256</Height>
+      <SheetX>0</SheetX>
+      <SheetY>256</SheetY>
+      <CategoryName>ui_tor_engineer_ability</CategoryName>
+    </SpritePart>
+    <SpritePart>
+      <SheetID>1</SheetID>
+      <Name>engineer_emergency_powder_keg_icon</Name>
+      <Width>256</Width>
+      <Height>256</Height>
+      <SheetX>256</SheetX>
+      <SheetY>256</SheetY>
+      <CategoryName>ui_tor_engineer_ability</CategoryName>
+    </SpritePart>
+    <SpritePart>
+      <SheetID>2</SheetID>
+      <Name>engineer_galvanic_discharger_icon</Name>
+      <Width>256</Width>
+      <Height>256</Height>
+      <SheetX>0</SheetX>
+      <SheetY>0</SheetY>
+      <CategoryName>ui_tor_engineer_ability</CategoryName>
+    </SpritePart>
+    <SpritePart>
+      <SheetID>2</SheetID>
+      <Name>engineer_targeting_beacon_icon</Name>
+      <Width>256</Width>
+      <Height>256</Height>
+      <SheetX>256</SheetX>
+      <SheetY>0</SheetY>
+      <CategoryName>ui_tor_engineer_ability</CategoryName>
+    </SpritePart>
+    <SpritePart>
+      <SheetID>2</SheetID>
+      <Name>engineer_aetheric_stabilizer_icon</Name>
+      <Width>256</Width>
+      <Height>256</Height>
+      <SheetX>0</SheetX>
+      <SheetY>256</SheetY>
+      <CategoryName>ui_tor_engineer_ability</CategoryName>
+    </SpritePart>
+    <SpritePart>
+      <SheetID>2</SheetID>
+      <Name>engineer_piercing_calibration_icon</Name>
+      <Width>256</Width>
+      <Height>256</Height>
+      <SheetX>256</SheetX>
+      <SheetY>256</SheetY>
+      <CategoryName>ui_tor_engineer_ability</CategoryName>
+    </SpritePart>
+    <SpritePart>
+      <SheetID>3</SheetID>
+      <Name>engineer_grapnel_launcher_icon</Name>
+      <Width>256</Width>
+      <Height>256</Height>
+      <SheetX>0</SheetX>
+      <SheetY>0</SheetY>
+      <CategoryName>ui_tor_engineer_ability</CategoryName>
+    </SpritePart>
+    <SpritePart>
+      <SheetID>3</SheetID>
+      <Name>engineer_powder_reserve_icon</Name>
+      <Width>256</Width>
+      <Height>256</Height>
+      <SheetX>256</SheetX>
+      <SheetY>0</SheetY>
+      <CategoryName>ui_tor_engineer_ability</CategoryName>
+    </SpritePart>
+    <SpritePart>
+      <SheetID>3</SheetID>
+      <Name>engineer_repeater_crank_icon</Name>
+      <Width>256</Width>
+      <Height>256</Height>
+      <SheetX>0</SheetX>
+      <SheetY>256</SheetY>
+      <CategoryName>ui_tor_engineer_ability</CategoryName>
+    </SpritePart>
+    <SpritePart>
+      <SheetID>1</SheetID>
       <Name>CareerSystem\Illustrations\Engineer</Name>
       <Width>500</Width>
       <Height>280</Height>
@@ -49,6 +132,42 @@
     <GenericSprite>
       <Name>engineer_artillery_barrage_icon</Name>
       <SpritePartName>engineer_artillery_barrage_icon</SpritePartName>
+    </GenericSprite>
+    <GenericSprite>
+      <Name>engineer_field_medkit_icon</Name>
+      <SpritePartName>engineer_field_medkit_icon</SpritePartName>
+    </GenericSprite>
+    <GenericSprite>
+      <Name>engineer_emergency_powder_keg_icon</Name>
+      <SpritePartName>engineer_emergency_powder_keg_icon</SpritePartName>
+    </GenericSprite>
+    <GenericSprite>
+      <Name>engineer_galvanic_discharger_icon</Name>
+      <SpritePartName>engineer_galvanic_discharger_icon</SpritePartName>
+    </GenericSprite>
+    <GenericSprite>
+      <Name>engineer_targeting_beacon_icon</Name>
+      <SpritePartName>engineer_targeting_beacon_icon</SpritePartName>
+    </GenericSprite>
+    <GenericSprite>
+      <Name>engineer_aetheric_stabilizer_icon</Name>
+      <SpritePartName>engineer_aetheric_stabilizer_icon</SpritePartName>
+    </GenericSprite>
+    <GenericSprite>
+      <Name>engineer_piercing_calibration_icon</Name>
+      <SpritePartName>engineer_piercing_calibration_icon</SpritePartName>
+    </GenericSprite>
+    <GenericSprite>
+      <Name>engineer_grapnel_launcher_icon</Name>
+      <SpritePartName>engineer_grapnel_launcher_icon</SpritePartName>
+    </GenericSprite>
+    <GenericSprite>
+      <Name>engineer_powder_reserve_icon</Name>
+      <SpritePartName>engineer_powder_reserve_icon</SpritePartName>
+    </GenericSprite>
+    <GenericSprite>
+      <Name>engineer_repeater_crank_icon</Name>
+      <SpritePartName>engineer_repeater_crank_icon</SpritePartName>
     </GenericSprite>
     <GenericSprite>
       <Name>CareerSystem\Illustrations\Engineer</Name>

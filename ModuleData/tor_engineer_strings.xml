@@ -6,7 +6,7 @@
   <string id="tor_career_rank3_name.Engineer" text="{=tor_engineer_rank3}Master Engineer" />
   <string id="tor_career_description.Engineer" text="{=tor_engineer_desc}Engineers turn powder, steel and measurement into battlefield doctrine. They fight through firearms, ammunition discipline, armor penetration and experimental shot." />
 
-  <string id="tor_careerchoice_description.EngineerRoot" text="{=tor_engineer_root}Firearm damage charges Open Fire!." />
+  <string id="tor_careerchoice_description.EngineerRoot" text="{=tor_engineer_root}Firearm damage charges Open Fire. Activates a 15s firing order." />
 
   <string id="tor_careerchoice_description.PowderDrillKeystone" text="{=tor_engineer_powder_key}Open Fire!: +5s; scales Gunpowder." />
   <string id="tor_careerchoice_description.PowderDrillPassive1" text="{=tor_engineer_powder_p1}+6 ammo per pouch." />
@@ -56,25 +56,25 @@
   <string id="tor_careerchoice_description.IncendiaryFusesPassive3" text="{=tor_engineer_fuses_p3}Barrage cooldown -5s." />
   <string id="tor_careerchoice_description.IncendiaryFusesPassive4" text="{=tor_engineer_fuses_p4}+30% Fire damage." />
 
-  <string id="tor_careerchoice_description.GrandBatteryKeystone" text="{=tor_engineer_battery_key}Barrage: +1 max gun, +1 shell/gun." />
+  <string id="tor_careerchoice_description.GrandBatteryKeystone" text="{=tor_engineer_battery_key}Barrage: +1 max gun, +1 shell per gun." />
   <string id="tor_careerchoice_description.GrandBatteryPassive1" text="{=tor_engineer_battery_p1}Barrage: +2 shells." />
   <string id="tor_careerchoice_description.GrandBatteryPassive2" text="{=tor_engineer_battery_p2}Barrage: +10% damage." />
-  <string id="tor_careerchoice_description.GrandBatteryPassive3" text="{=tor_engineer_battery_p3}Barrage: +impact radius." />
-  <string id="tor_careerchoice_description.GrandBatteryPassive4" text="{=tor_engineer_battery_p4}Barrage: +2 shells, cooldown -5s." />
+  <string id="tor_careerchoice_description.GrandBatteryPassive3" text="{=tor_engineer_battery_p3}Barrage: larger impact radius." />
+  <string id="tor_careerchoice_description.GrandBatteryPassive4" text="{=tor_engineer_battery_p4}Barrage: +2 shells, -5s cooldown." />
 
   <string id="tor_engineer_cc_option" text="{=tor_engineer_cc_option}Imperial Engineer" />
   <string id="tor_engineer_cc_effect" text="{=tor_engineer_cc_effect}Engineer Career" />
   <string id="tor_engineer_cc_flavour" text="{=tor_engineer_cc_flavour}You learned the sacred arithmetic of powder, bore and fuse in the Imperial gunnery schools. Now you take the field with rifle, shot and a doctrine simple enough for any soldier to understand: open fire." />
 
   <string id="tor_engineer_hub_dwarf_contraband_p" text="{=tor_engineer_hub_dwarf_contraband_p}I have heard you can source contraband Dawi firearms. Can we arrange that?" />
-  <string id="tor_engineer_dwarf_contraband_upgrade_1" text="{=tor_engineer_dwarf_contraband_upgrade_1}For 500{PRESTIGE_ICON} I can smuggle in apprentice-grade Dawi handguns, crossbows and powder." />
-  <string id="tor_engineer_dwarf_contraband_upgrade_2" text="{=tor_engineer_dwarf_contraband_upgrade_2}Another 500{PRESTIGE_ICON} opens a second crate — cannon, grudge-raker, drakefire pistols and the rest of their gunline, but no drakeguns." />
-  <string id="tor_engineer_dwarf_contraband_upgrade_3" text="{=tor_engineer_dwarf_contraband_upgrade_3}A final 500{PRESTIGE_ICON} secures their masterwork pieces — trollhammers, drakefire sidearms and the last contraband I dare move through Nuln." />
+  <string id="tor_engineer_dwarf_contraband_upgrade_1" text="{=tor_engineer_dwarf_contraband_upgrade_1}For 500{PRESTIGE_ICON} I can move Dawi handguns, bullets and blasting charges." />
+  <string id="tor_engineer_dwarf_contraband_upgrade_2" text="{=tor_engineer_dwarf_contraband_upgrade_2}Another 500{PRESTIGE_ICON} opens cannon, hand grenades, grudge-rakers, buckshot and drakefire pistols." />
+  <string id="tor_engineer_dwarf_contraband_upgrade_3" text="{=tor_engineer_dwarf_contraband_upgrade_3}A final 500{PRESTIGE_ICON} secures masterwork handguns, Dronazgrund, trollhammers and torpedoes." />
   <string id="tor_engineer_dwarf_contraband_complete" text="{=tor_engineer_dwarf_contraband_complete}You already bought out every contraband contact I have. Browse my stock when you buy equipment." />
   <string id="tor_engineer_dwarf_contraband_agree" text="{=tor_engineer_dwarf_contraband_agree}Very well. Grease the right palms (Spend 500{PRESTIGE_ICON})." />
   <string id="tor_engineer_dwarf_contraband_decline" text="{=tor_engineer_dwarf_contraband_decline}I cannot afford that right now." />
-  <string id="tor_engineer_dwarf_contraband_upgrade_1_done" text="{=tor_engineer_dwarf_contraband_upgrade_1_done}The first crate is on its way. Ask to buy equipment when you are ready — the contraband will be mixed in quietly." />
+  <string id="tor_engineer_dwarf_contraband_upgrade_1_done" text="{=tor_engineer_dwarf_contraband_upgrade_1_done}The first crate is on its way. Ask to buy equipment when you are ready; the contraband will be mixed in quietly." />
   <string id="tor_engineer_dwarf_contraband_upgrade_2_done" text="{=tor_engineer_dwarf_contraband_upgrade_2_done}Good. The second shipment should keep your gunline supplied for a long campaign." />
   <string id="tor_engineer_dwarf_contraband_upgrade_3_done" text="{=tor_engineer_dwarf_contraband_upgrade_3_done}That is everything I dare move. Sigmar help us if the Guild ever traces it back to my forge." />
-  <string id="tor_engineer_dwarf_contraband_decline_response" text="{=tor_engineer_dwarf_contraband_decline_response}Come back when your purse — and your reputation — can bear it." />
+  <string id="tor_engineer_dwarf_contraband_decline_response" text="{=tor_engineer_dwarf_contraband_decline_response}Come back when your purse and your reputation can bear it." />
 </strings>

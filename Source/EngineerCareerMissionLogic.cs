@@ -16,7 +16,7 @@ namespace TOR_EngineerCareer
         private const int ExplosiveDamage = 60;
         private const float RicochetExplosionRadius = 2.5f;
         private const int RicochetExplosionDamage = 45;
-        private const float RicochetDetonationChance = 0.5f;
+        private const float RicochetDetonationChance = 0.3f;
         private const float OverpenetrationRange = 7f;
         private const float OverpenetrationConeDot = 0.86f;
         private const float RicochetRange = 6f;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.Inventory;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
@@ -10,6 +11,7 @@ using TOR_Core.BattleMechanics.TriggeredEffect;
 using TOR_Core.CampaignMechanics.Choices;
 using TOR_Core.CharacterDevelopment;
 using TOR_Core.Extensions;
+using TOR_Core.Items;
 using TOR_Core.Models;
 
 namespace TOR_EngineerCareer
@@ -47,9 +49,17 @@ namespace TOR_EngineerCareer
                 weapon.CurrentUsageItem.IsGunPowderWeapon())
             {
                 agentDrivenProperties.MissileSpeedMultiplier *= EngineerCareerHelper.GetGunpowderMissileSpeedMultiplier();
+
+                var upgradeLogic = Mission.Current?.GetMissionBehavior<EngineerEquipmentUpgradeMissionLogic>();
+                if (upgradeLogic?.HasAethericStabilizer(agent) == true)
+                {
+                    agentDrivenProperties.MissileSpeedMultiplier *= 1.20f;
+                    agentDrivenProperties.ReloadSpeed *= 1.15f;
+                    agentDrivenProperties.WeaponInaccuracy *= 0.65f;
+                }
             }
 
-            if (!weapon.IsEmpty && weapon.IsAnyAmmo() && weapon.Item.IsGrenadeAmmo())
+            if (!weapon.IsEmpty && weapon.IsAnyAmmo() && EngineerCareerHelper.IsEngineerGrenadeItem(weapon.Item))
             {
                 agentDrivenProperties.MissileSpeedMultiplier *= EngineerCareerHelper.GetGrenadeMissileSpeedMultiplier();
             }
@@ -81,7 +91,7 @@ namespace TOR_EngineerCareer
                 var missionWeapon = equipment[index];
                 if (missionWeapon.IsEmpty ||
                     missionWeapon.CurrentUsageItem == null ||
-                    !missionWeapon.Item.IsSpecialAmmunitionItem())
+                    !EngineerCareerHelper.IsEngineerGrenadeItem(missionWeapon.Item))
                 {
                     continue;
                 }
@@ -101,22 +111,56 @@ namespace TOR_EngineerCareer
     {
         private static void Prefix(Agent shooterAgent, ref float velocity)
         {
+            EngineerEquipmentUpgradeHelper.StoreLastGrenadeUpgrades(shooterAgent);
+
             if (!EngineerCareerHelper.IsEngineerMainAgent(shooterAgent))
             {
                 return;
             }
 
             var ammo = shooterAgent.WieldedWeapon.AmmoWeapon;
-            if (!ammo.IsEmpty && ammo.Item.IsGrenadeAmmo())
+            if (!ammo.IsEmpty && EngineerCareerHelper.IsEngineerGrenadeItem(ammo.Item))
             {
                 velocity *= EngineerCareerHelper.GetGrenadeMissileSpeedMultiplier();
+            }
+
+            var upgradeLogic = Mission.Current?.GetMissionBehavior<EngineerEquipmentUpgradeMissionLogic>();
+            var weapon = shooterAgent.WieldedWeapon;
+            if (!weapon.IsEmpty &&
+                weapon.CurrentUsageItem != null &&
+                weapon.CurrentUsageItem.IsGunPowderWeapon() &&
+                upgradeLogic?.HasAethericStabilizer(shooterAgent) == true)
+            {
+                velocity *= 1.20f;
             }
         }
 
         private static void Postfix(Agent shooterAgent)
         {
-            if (!EngineerCareerHelper.IsEngineerMainAgent(shooterAgent) ||
-                !EngineerCareerHelper.HasChoice("RicochetTacticsPassive4"))
+            if (!EngineerCareerHelper.IsEngineerMainAgent(shooterAgent))
+            {
+                return;
+            }
+
+            var weaponData = shooterAgent.WieldedWeapon.CurrentUsageItem;
+            var isGunpowderShot = weaponData != null && weaponData.IsGunPowderWeapon();
+            var upgradeLogic = Mission.Current?.GetMissionBehavior<EngineerEquipmentUpgradeMissionLogic>();
+            if (isGunpowderShot)
+            {
+                upgradeLogic?.ConsumeAethericShot(shooterAgent);
+                if (upgradeLogic?.TryConsumeRepeaterCrank(shooterAgent) == true)
+                {
+                    FireRepeaterCrank(shooterAgent, weaponData, upgradeLogic.GetRepeaterExtraShotCount(shooterAgent));
+                }
+            }
+
+            if (!EngineerCareerHelper.HasChoice("RicochetTacticsPassive4"))
+            {
+                return;
+            }
+
+            var weaponItemId = shooterAgent.WieldedWeapon.Item?.StringId;
+            if (!IsBuckshotWeapon(weaponItemId))
             {
                 return;
             }
@@ -128,7 +172,6 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            var weaponData = shooterAgent.WieldedWeapon.CurrentUsageItem;
             if (weaponData == null)
             {
                 return;
@@ -153,6 +196,88 @@ namespace TOR_EngineerCareer
                 weaponData.MissileSpeed,
                 3);
         }
+
+        private static bool IsBuckshotWeapon(string weaponItemId)
+        {
+            return !string.IsNullOrEmpty(weaponItemId) &&
+                   (weaponItemId.IndexOf("blunderbuss", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    weaponItemId.IndexOf("grudge_raker", System.StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        private static void FireRepeaterCrank(Agent shooterAgent, WeaponComponentData weaponData, int extraShotCount)
+        {
+            if (extraShotCount <= 0)
+            {
+                return;
+            }
+
+            var ammo = shooterAgent.WieldedWeapon.AmmoWeapon;
+            if (ammo.IsEmpty)
+            {
+                return;
+            }
+
+            var logic = Mission.Current?.GetMissionBehavior<FirearmsMissionLogic>();
+            if (logic == null)
+            {
+                return;
+            }
+
+            var frame = shooterAgent.Frame;
+            var accuracy = 1f / (weaponData.Accuracy * 1.05f);
+            logic.ScatterShot(
+                shooterAgent,
+                accuracy,
+                ammo,
+                frame.origin,
+                frame.rotation,
+                weaponData.MissileSpeed,
+                (short)extraShotCount);
+        }
+    }
+
+    [HarmonyPatch(typeof(TORAgentApplyDamageModel), nameof(TORAgentApplyDamageModel.ApplyGeneralDamageModifiers))]
+    internal static class EngineerEquipmentUpgradeDamagePatch
+    {
+        private static void Postfix(in AttackInformation attackInformation, in AttackCollisionData collisionData, ref float __result)
+        {
+            var logic = Mission.Current?.GetMissionBehavior<EngineerEquipmentUpgradeMissionLogic>();
+            if (logic == null)
+            {
+                return;
+            }
+
+            var attacker = attackInformation.AttackerAgent;
+            var victim = attackInformation.VictimAgent;
+            if (attacker == null || victim == null)
+            {
+                return;
+            }
+
+            if (logic.IsInsideTargetingBeacon(victim, attacker))
+            {
+                __result *= 1.20f;
+            }
+
+            if (IsGunpowderAttack(attackInformation, collisionData) &&
+                logic.TryConsumePiercingCalibration(attacker))
+            {
+                __result *= 1.35f;
+            }
+        }
+
+        private static bool IsGunpowderAttack(in AttackInformation attackInformation, in AttackCollisionData collisionData)
+        {
+            if (!collisionData.IsMissile)
+            {
+                return false;
+            }
+
+            var weapon = attackInformation.AttackerWeapon;
+            return !weapon.IsEmpty &&
+                   weapon.CurrentUsageItem != null &&
+                   weapon.CurrentUsageItem.IsGunPowderWeapon();
+        }
     }
 
     [HarmonyPatch(typeof(TriggeredEffect), nameof(TriggeredEffect.Trigger))]
@@ -165,7 +290,11 @@ namespace TOR_EngineerCareer
         {
             HealthSnapshot.Clear();
 
-            if (!EngineerCareerHelper.IsEngineerMainAgent(triggererAgent))
+            var isEngineerMainAgent = EngineerCareerHelper.IsEngineerMainAgent(triggererAgent);
+            var hasFragmentationCasing = EngineerEquipmentUpgradeHelper.LastGrenadeHasUpgrade(triggererAgent, "eng_upgrade_grenade_fragmentation_casing");
+            var hasShapedCharge = EngineerEquipmentUpgradeHelper.LastGrenadeHasUpgrade(triggererAgent, "eng_upgrade_grenade_shaped_charge");
+
+            if (!isEngineerMainAgent && !hasFragmentationCasing && !hasShapedCharge)
             {
                 return;
             }
@@ -176,22 +305,35 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            var radius = BaseGrenadeExplosionRadius * EngineerCareerHelper.GetGrenadeRadiusMultiplier();
-            foreach (var agent in Mission.Current.GetNearbyAgents(position.AsVec2, radius, new MBList<Agent>()))
+            var radius = BaseGrenadeExplosionRadius * (isEngineerMainAgent ? EngineerCareerHelper.GetGrenadeRadiusMultiplier() : 1f);
+            if (hasFragmentationCasing)
             {
-                if (agent != null && agent.IsHuman && agent.IsEnemyOf(triggererAgent) && agent.IsActive() && agent.Health > 0f)
+                radius *= 1.15f;
+            }
+
+            if (isEngineerMainAgent)
+            {
+                foreach (var agent in Mission.Current.GetNearbyAgents(position.AsVec2, radius, new MBList<Agent>()))
                 {
-                    HealthSnapshot[agent] = agent.Health;
+                    if (agent != null && agent.IsHuman && agent.IsEnemyOf(triggererAgent) && agent.IsActive() && agent.Health > 0f)
+                    {
+                        HealthSnapshot[agent] = agent.Health;
+                    }
                 }
             }
 
-            if (!EngineerCareerHelper.HasChoice("GrenadierPassive2"))
+            if (!hasFragmentationCasing && !hasShapedCharge && !EngineerCareerHelper.HasChoice("GrenadierPassive2"))
             {
                 return;
             }
 
             var runtimeTemplate = (TriggeredEffectTemplate)template.Clone(EngineerCareerHelper.GrenadeExplosionId + "_engineer");
             runtimeTemplate.Radius = radius;
+            if (hasShapedCharge)
+            {
+                runtimeTemplate.DamageAmount = (int)(runtimeTemplate.DamageAmount * 1.15f);
+            }
+
             Traverse.Create(__instance).Field<TriggeredEffectTemplate>("_template").Value = runtimeTemplate;
         }
 
@@ -222,7 +364,7 @@ namespace TOR_EngineerCareer
             for (var i = 0; i < 5; i++)
             {
                 var weapon = agent.Equipment[(EquipmentIndex)i];
-                if (weapon.IsEmpty || !weapon.Item.IsGrenadeAmmo())
+                if (weapon.IsEmpty || !EngineerCareerHelper.IsEngineerGrenadeItem(weapon.Item))
                 {
                     continue;
                 }
@@ -230,6 +372,88 @@ namespace TOR_EngineerCareer
                 agent.SetWeaponAmountInSlot((EquipmentIndex)i, (short)(weapon.Amount + 1), true);
                 break;
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(TorItemMenuVM), "CheckItem")]
+    internal static class EngineerInventoryGunpowderRestrictionPatch
+    {
+        private static bool Prefix(InventoryLogic inventoryLogic, List<TransferCommandResult> results)
+        {
+            if (!EngineerCareerHelper.IsEngineerHero(Hero.MainHero) || inventoryLogic == null || results == null)
+            {
+                return true;
+            }
+
+            PreserveShieldAndStaffRestriction(inventoryLogic, results);
+            return false;
+        }
+
+        private static void PreserveShieldAndStaffRestriction(InventoryLogic inventoryLogic, List<TransferCommandResult> results)
+        {
+            foreach (var result in results)
+            {
+                if (result.ResultSide != InventoryLogic.InventorySide.BattleEquipment)
+                {
+                    continue;
+                }
+
+                var movedItem = result.EffectedItemRosterElement.EquipmentElement.Item;
+                var transferCharacter = result.TransferCharacter;
+                if (movedItem == null || transferCharacter == null)
+                {
+                    continue;
+                }
+
+                var movedIsShield = movedItem.IsShield();
+                var movedIsOffhandStaff = IsOffhandStaff(movedItem);
+                if (!movedIsShield && !movedIsOffhandStaff)
+                {
+                    continue;
+                }
+
+                var hasOtherShield = false;
+                var hasOtherOffhandStaff = false;
+                var targetEquipment = transferCharacter.GetCharacterEquipment(
+                    EquipmentIndex.Weapon0,
+                    EquipmentIndex.NumAllWeaponSlots);
+
+                foreach (var equipmentItem in targetEquipment.Where(x => x != null && x != movedItem))
+                {
+                    if (equipmentItem.IsShield())
+                    {
+                        hasOtherShield = true;
+                    }
+
+                    if (IsOffhandStaff(equipmentItem))
+                    {
+                        hasOtherOffhandStaff = true;
+                    }
+                }
+
+                if ((movedIsShield && hasOtherOffhandStaff) ||
+                    (movedIsOffhandStaff && hasOtherShield))
+                {
+                    var command = TransferCommand.Transfer(
+                        1,
+                        InventoryLogic.InventorySide.BattleEquipment,
+                        InventoryLogic.InventorySide.PlayerInventory,
+                        result.EffectedItemRosterElement,
+                        result.EffectedEquipmentIndex,
+                        EquipmentIndex.None,
+                        transferCharacter);
+
+                    inventoryLogic.AddTransferCommand(command);
+                    break;
+                }
+            }
+        }
+
+        private static bool IsOffhandStaff(ItemObject item)
+        {
+            return item != null &&
+                   (item.ItemFlags & ItemFlags.HeldInOffHand) != 0 &&
+                   item.StringId.IndexOf("staff", System.StringComparison.OrdinalIgnoreCase) >= 0;
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
@@ -15,6 +16,15 @@ namespace TOR_EngineerCareer
         public const string CareerIllustrationSprite = "CareerSystem\\Illustrations\\Engineer";
         public const string OpenFireIconSprite = "let_them_have_it_icon";
         public const string ArtilleryBarrageIconSprite = "placeartillery_icon";
+        public const string FieldMedkitIconSprite = "engineer_field_medkit_icon";
+        public const string EmergencyPowderKegIconSprite = "engineer_emergency_powder_keg_icon";
+        public const string GalvanicDischargerIconSprite = "engineer_galvanic_discharger_icon";
+        public const string TargetingBeaconIconSprite = "engineer_targeting_beacon_icon";
+        public const string AethericStabilizerIconSprite = "engineer_aetheric_stabilizer_icon";
+        public const string PiercingCalibrationIconSprite = "engineer_piercing_calibration_icon";
+        public const string GrapnelLauncherIconSprite = "engineer_grapnel_launcher_icon";
+        public const string PowderReserveIconSprite = "engineer_powder_reserve_icon";
+        public const string RepeaterCrankIconSprite = "engineer_repeater_crank_icon";
 
         public const string GrenadeExplosionId = "grenade_explosion";
         public const string ArtilleryBarrageBurnStatusEffectId = "fireball_dot";
@@ -126,6 +136,21 @@ namespace TOR_EngineerCareer
         public static float GetGrenadeMissileSpeedMultiplier()
         {
             return HasChoice("GrenadierPassive4") ? 1.3f : 1f;
+        }
+
+        public static bool IsEngineerGrenadeItem(ItemObject item)
+        {
+            return item != null &&
+                   (item.IsGrenadeAmmo() ||
+                    item.StringId == "tor_empire_weapon_ammo_grenade" ||
+                    item.StringId.Contains("blasting_charges"));
+        }
+
+        public static void EnsureEngineerGrenadesAreUsable()
+        {
+            SetItemDifficulty("tor_empire_weapon_ammo_grenade", 0);
+            SetItemDifficulty("tor_dw_weapon_grenade_hand_grenade", 0);
+            SetItemDifficulty("tor_dw_weapon_blasting_charges", 0);
         }
 
         public static int GetArtilleryBarrageMaxGunBonus(Hero hero)
@@ -247,7 +272,12 @@ namespace TOR_EngineerCareer
 
         public static string BuildOpenFireDurationText()
         {
-            return $"Base {BaseOpenFireDuration:0}s.";
+            return $"Base duration: {BaseOpenFireDuration:0}s.";
+        }
+
+        public static string BuildOpenFireDescriptionText()
+        {
+            return $"Firearm damage charges Open Fire. Activates a {BaseOpenFireDuration:0}s firing order.";
         }
 
         public static SkillObject GetGunpowderSkill()
@@ -297,6 +327,18 @@ namespace TOR_EngineerCareer
 
             return MBObjectManager.Instance?.GetObject<SkillObject>(skillId)
                 ?? Game.Current?.ObjectManager?.GetObject<SkillObject>(skillId);
+        }
+
+        private static void SetItemDifficulty(string itemId, int difficulty)
+        {
+            var item = MBObjectManager.Instance?.GetObject<ItemObject>(itemId)
+                ?? Game.Current?.ObjectManager?.GetObject<ItemObject>(itemId);
+            if (item == null)
+            {
+                return;
+            }
+
+            AccessTools.Property(typeof(ItemObject), nameof(ItemObject.Difficulty))?.SetValue(item, difficulty);
         }
     }
 }
