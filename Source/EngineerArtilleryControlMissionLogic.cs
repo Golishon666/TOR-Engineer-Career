@@ -22,8 +22,10 @@ namespace TOR_EngineerCareer
         private const float MouseWorldWidthAtMaxZoom = 145f;
         private const float ImpactRadius = 5f;
         private const float MaxCommandRange = 600f;
-        private const float TrajectoryRibbonWidth = 0.55f;
-        private const float ImpactCircleRibbonWidth = 0.35f;
+        private const float TrajectoryRibbonWidth = 1.8f;
+        private const float ImpactCircleRibbonWidth = 1.15f;
+        private const float TrajectoryVisualLift = 1.6f;
+        private const float ImpactCircleVisualLift = 0.75f;
         private const uint ValidColor = 0xFF20FF40;
         private const uint BlockedColor = 0xFFFF3030;
         private const uint AllyContourColor = 0xFF35B6FF;
@@ -328,24 +330,24 @@ namespace TOR_EngineerCareer
         {
             var input = Mission.InputManager;
             var move = Vec3.Zero;
-            if (input.IsKeyDown(InputKey.Up) || input.IsKeyDown(InputKey.Numpad8))
-            {
-                move.y += 1f;
-            }
-
-            if (input.IsKeyDown(InputKey.Down) || input.IsKeyDown(InputKey.Numpad2))
-            {
-                move.y -= 1f;
-            }
-
-            if (input.IsKeyDown(InputKey.Right) || input.IsKeyDown(InputKey.Numpad6))
+            if (input.IsKeyDown(InputKey.W) || input.IsKeyDown(InputKey.Up) || input.IsKeyDown(InputKey.Numpad8))
             {
                 move.x += 1f;
             }
 
-            if (input.IsKeyDown(InputKey.Left) || input.IsKeyDown(InputKey.Numpad4))
+            if (input.IsKeyDown(InputKey.S) || input.IsKeyDown(InputKey.Down) || input.IsKeyDown(InputKey.Numpad2))
             {
                 move.x -= 1f;
+            }
+
+            if (input.IsKeyDown(InputKey.D) || input.IsKeyDown(InputKey.Right) || input.IsKeyDown(InputKey.Numpad6))
+            {
+                move.y -= 1f;
+            }
+
+            if (input.IsKeyDown(InputKey.A) || input.IsKeyDown(InputKey.Left) || input.IsKeyDown(InputKey.Numpad4))
+            {
+                move.y += 1f;
             }
 
             if (move.LengthSquared > 0.01f)
@@ -635,15 +637,19 @@ namespace TOR_EngineerCareer
 
             var color = _aimState == AimState.Valid ? ValidColor : BlockedColor;
             EnsureOverlayEntity();
+            PrepareOverlayForColor(color);
             RenderTrajectory(weapon, GetWeaponOrigin(weapon), _aimTarget, color);
             RenderImpactCircle(_aimTarget, ImpactRadius, color);
             _overlayMesh?.ComputeNormals();
             _overlayMesh?.UpdateBoundingBox();
+            _overlayMesh?.PreloadForRendering();
         }
 
         private void RenderTrajectory(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target, uint color)
         {
             const int segments = 24;
+            origin.z += TrajectoryVisualLift;
+            target.z += TrajectoryVisualLift;
             var last = origin;
             var arcHeight = GetTrajectoryArcHeight(weapon, origin, target);
 
@@ -707,6 +713,11 @@ namespace TOR_EngineerCareer
                 AddRibbonSegment(last, current, ImpactCircleRibbonWidth, color);
                 last = current;
             }
+
+            AddRibbonSegment(CirclePoint(center, radius * 0.35f, 0f), CirclePoint(center, radius, 0f), ImpactCircleRibbonWidth * 0.75f, color);
+            AddRibbonSegment(CirclePoint(center, radius * 0.35f, 0.25f), CirclePoint(center, radius, 0.25f), ImpactCircleRibbonWidth * 0.75f, color);
+            AddRibbonSegment(CirclePoint(center, radius * 0.35f, 0.5f), CirclePoint(center, radius, 0.5f), ImpactCircleRibbonWidth * 0.75f, color);
+            AddRibbonSegment(CirclePoint(center, radius * 0.35f, 0.75f), CirclePoint(center, radius, 0.75f), ImpactCircleRibbonWidth * 0.75f, color);
         }
 
         private void EnsureOverlayEntity()
@@ -716,10 +727,12 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            var material = Material.GetDefaultMaterial();
+            var material = CreateOverlayMaterial();
             _overlayMesh = Mesh.CreateMeshWithMaterial(material);
             _overlayMesh.Name = "tor_engineer_artillery_overlay_mesh";
             _overlayMesh.SetMeshRenderOrder(200);
+            _overlayMesh.Color = ValidColor;
+            _overlayMesh.Color2 = ValidColor;
             _overlayMesh.HintVerticesDynamic();
             _overlayMesh.HintIndicesDynamic();
 
@@ -729,7 +742,42 @@ namespace TOR_EngineerCareer
             var frame = MatrixFrame.Identity;
             _overlayEntity.SetFrame(ref frame, true);
             _overlayEntity.SetVisibilityExcludeParents(true);
+            _overlayEntity.SetDoNotCheckVisibility(true);
             _overlayEntity.SetReadyToRender(true);
+        }
+
+        private static Material CreateOverlayMaterial()
+        {
+            foreach (var materialName in new[] { "plain_white", "plank_stake_a_vertex_color", "location_debug_mat" })
+            {
+                try
+                {
+                    var material = Material.GetFromResource(materialName);
+                    if (material != null)
+                    {
+                        return material;
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            return Material.GetDefaultMaterial();
+        }
+
+        private void PrepareOverlayForColor(uint color)
+        {
+            if (_overlayMesh == null)
+            {
+                return;
+            }
+
+            _overlayMesh.Color = color;
+            _overlayMesh.Color2 = color;
+            _overlayMesh.SetColorAndStroke(color, color, true);
+            _overlayMesh.SetColorAlpha(255);
+            _overlayEntity?.SetContourColor(color, true);
         }
 
         private void ClearOverlayMesh()
@@ -797,7 +845,7 @@ namespace TOR_EngineerCareer
         {
             var angle = t * MBMath.TwoPI;
             var point = center + new Vec3(MathF.Cos(angle) * radius, MathF.Sin(angle) * radius, 0f);
-            point.z = Mission.Scene.GetGroundHeightAtPosition(point, BodyFlags.CommonCollisionExcludeFlags) + 0.12f;
+            point.z = Mission.Scene.GetGroundHeightAtPosition(point, BodyFlags.CommonCollisionExcludeFlags) + ImpactCircleVisualLift;
             return point;
         }
 
@@ -805,7 +853,7 @@ namespace TOR_EngineerCareer
         {
             MBDebug.RenderDebugText(0.035f, 0.78f, "ENGINEER ARTILLERY CONTROL", PanelColor, 0.95f);
             var pending = _pendingFireWeapon == null ? string.Empty : " | LINING UP";
-            MBDebug.RenderDebugText(0.035f, 0.815f, $"Alt+X/Esc: exit | Arrows: pan | LMB: fire | Aim: {_aimState}{pending}", PanelColor, 0.8f);
+            MBDebug.RenderDebugText(0.035f, 0.815f, $"Alt+X/Esc: exit | WASD/arrows: pan | LMB: fire | Aim: {_aimState}{pending}", PanelColor, 0.8f);
 
             var y = 0.85f;
             for (var i = 0; i < _playerArtillery.Count; i++)
@@ -902,7 +950,7 @@ namespace TOR_EngineerCareer
             _viewModel.AimState = _aimState.ToString();
             _viewModel.ArtillerySummary = BuildArtillerySummary();
             _viewModel.StatusText = _isControlModeActive
-                ? "Alt+X/Esc exits. Arrow keys pan. LMB fires one ready gun."
+                ? "Alt+X/Esc exits. WASD/arrows pan. LMB fires one ready gun."
                 : "Alt+X opens artillery control when deployed artillery is available.";
         }
 
