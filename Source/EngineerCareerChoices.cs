@@ -37,6 +37,8 @@ namespace TOR_EngineerCareer
             RegisterBranch("Grenadier");
             RegisterBranch("PiercingDoctrine");
             RegisterBranch("RicochetTactics");
+            RegisterBranch("IncendiaryFuses");
+            RegisterBranch("GrandBattery");
         }
 
         protected override void InitializeKeyStones()
@@ -48,7 +50,7 @@ namespace TOR_EngineerCareer
             }
 
             _engineerRoot.Initialize(CareerID,
-                $"Open Fire! orders a brutal gunline volley. While active, the Engineer gains ranged physical damage and reload speed. {EngineerCareerHelper.BuildOpenFireDurationText()}",
+                $"Open Fire! orders a brutal gunline volley. While active, the Engineer gains ranged physical damage and reload speed. Artillery Barrage is improved by Incendiary Fuses and Grand Battery. {EngineerCareerHelper.BuildOpenFireDurationText()}",
                 null,
                 true,
                 ChoiceType.Keystone,
@@ -98,6 +100,14 @@ namespace TOR_EngineerCareer
                 CombineMutations(
                     MutateAbilityFloat(nameof(AbilityTemplate.Duration), EngineerCareerHelper.RicochetTacticsDurationBonus),
                     MutateTriggeredEffectFloat("apply_let_them_have_it", nameof(TriggeredEffectTemplate.Radius), 2f)));
+
+            Keystone("IncendiaryFuses",
+                "Tier I artillery doctrine: Artillery Barrage ignites enemies hit by shell impacts, dealing Fire damage over time.",
+                NoMutations());
+
+            Keystone("GrandBattery",
+                "Tier III artillery doctrine: Artillery Barrage counts +1 maximum artillery piece and fires +1 extra shell per artillery piece.",
+                NoMutations());
         }
 
         protected override void InitializePassives()
@@ -136,6 +146,16 @@ namespace TOR_EngineerCareer
             Passive("RicochetTactics", 2, "+15% personal ranged physical resistance.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Resistance, new DamageProportionTuple(DamageType.Physical, 15), AttackTypeMask.Ranged));
             Passive("RicochetTactics", 3, "+15% personal firearm accuracy.", new CareerChoiceObject.PassiveEffect(-15, PassiveEffectType.AccuracyPenalty, true));
             Passive("RicochetTactics", 4, "Firearm hits ricochet once even without Open Fire! and explode on impact. Buckshot fires +3 extra pellets.", SpecialPassive());
+
+            Passive("IncendiaryFuses", 1, "+10% Artillery Barrage impact damage.", SpecialPassive());
+            Passive("IncendiaryFuses", 2, "Artillery Barrage burning lasts +2 seconds and burns 15% harder.", SpecialPassive());
+            Passive("IncendiaryFuses", 3, "Artillery Barrage cooldown is reduced by 5 seconds.", SpecialPassive());
+            Passive("IncendiaryFuses", 4, "+30% personal Fire damage.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Damage, new DamageProportionTuple(DamageType.Fire, 30), AttackTypeMask.Ranged));
+
+            Passive("GrandBattery", 1, "Artillery Barrage fires +2 extra shells.", SpecialPassive());
+            Passive("GrandBattery", 2, "+10% Artillery Barrage impact damage.", SpecialPassive());
+            Passive("GrandBattery", 3, "Artillery Barrage shell impact radius is increased.", SpecialPassive());
+            Passive("GrandBattery", 4, "Artillery Barrage fires +2 extra shells and cooldown is reduced by 5 seconds.", SpecialPassive());
         }
 
         private static CareerChoiceObject Register(string id)
@@ -371,6 +391,11 @@ namespace TOR_EngineerCareer
         private static List<CareerChoiceObject.MutationObject> CombineMutations(params List<CareerChoiceObject.MutationObject>[] mutations)
         {
             return mutations.SelectMany(x => x).ToList();
+        }
+
+        private static List<CareerChoiceObject.MutationObject> NoMutations()
+        {
+            return new List<CareerChoiceObject.MutationObject>();
         }
     }
 }

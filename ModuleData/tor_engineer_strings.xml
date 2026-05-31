@@ -6,7 +6,7 @@
   <string id="tor_career_rank3_name.Engineer" text="{=tor_engineer_rank3}Master Engineer" />
   <string id="tor_career_description.Engineer" text="{=tor_engineer_desc}Engineers turn powder, steel and measurement into battlefield doctrine. They fight through firearms, ammunition discipline, armor penetration and experimental shot." />
 
-  <string id="tor_careerchoice_description.EngineerRoot" text="{=tor_engineer_root}Open Fire! orders a disciplined volley. Charge it by dealing firearm damage. While active, the Engineer holds the line and gains ranged physical damage and reload speed. Base duration: 15 seconds. Powder Drill and Ricochet Tactics keystones add +5 seconds each. Career talents can extend the order, add ranged protection, explosive rounds, piercing shots, ricochets and grenadier tricks." />
+  <string id="tor_careerchoice_description.EngineerRoot" text="{=tor_engineer_root}Open Fire! orders a disciplined volley. Charge it by dealing firearm damage. While active, the Engineer holds the line and gains ranged physical damage and reload speed. Artillery Barrage is improved by Incendiary Fuses and Grand Battery. Base duration: 15 seconds. Powder Drill and Ricochet Tactics keystones add +5 seconds each. Career talents can extend the order, add ranged protection, explosive rounds, piercing shots, ricochets and grenadier tricks." />
 
   <string id="tor_careerchoice_description.PowderDrillKeystone" text="{=tor_engineer_powder_key}Open Fire! lasts 5 seconds longer, grants stronger reload speed. Now it scales with Gunpowder." />
   <string id="tor_careerchoice_description.PowderDrillPassive1" text="{=tor_engineer_powder_p1}+6 extra ammo per ammunition pouch." />
@@ -49,6 +49,18 @@
   <string id="tor_careerchoice_description.RicochetTacticsPassive2" text="{=tor_engineer_ricochet_p2}+15% personal ranged physical resistance." />
   <string id="tor_careerchoice_description.RicochetTacticsPassive3" text="{=tor_engineer_ricochet_p3}+15% personal firearm accuracy." />
   <string id="tor_careerchoice_description.RicochetTacticsPassive4" text="{=tor_engineer_ricochet_p4}Firearm hits ricochet once even without Open Fire! and explode on impact. Buckshot fires +3 extra pellets." />
+
+  <string id="tor_careerchoice_description.IncendiaryFusesKeystone" text="{=tor_engineer_fuses_key}Tier I artillery doctrine: Artillery Barrage ignites enemies hit by shell impacts, dealing Fire damage over time." />
+  <string id="tor_careerchoice_description.IncendiaryFusesPassive1" text="{=tor_engineer_fuses_p1}+10% Artillery Barrage impact damage." />
+  <string id="tor_careerchoice_description.IncendiaryFusesPassive2" text="{=tor_engineer_fuses_p2}Artillery Barrage burning lasts +2 seconds and burns 15% harder." />
+  <string id="tor_careerchoice_description.IncendiaryFusesPassive3" text="{=tor_engineer_fuses_p3}Artillery Barrage cooldown is reduced by 5 seconds." />
+  <string id="tor_careerchoice_description.IncendiaryFusesPassive4" text="{=tor_engineer_fuses_p4}+30% personal Fire damage." />
+
+  <string id="tor_careerchoice_description.GrandBatteryKeystone" text="{=tor_engineer_battery_key}Tier III artillery doctrine: Artillery Barrage counts +1 maximum artillery piece and fires +1 extra shell per artillery piece." />
+  <string id="tor_careerchoice_description.GrandBatteryPassive1" text="{=tor_engineer_battery_p1}Artillery Barrage fires +2 extra shells." />
+  <string id="tor_careerchoice_description.GrandBatteryPassive2" text="{=tor_engineer_battery_p2}+10% Artillery Barrage impact damage." />
+  <string id="tor_careerchoice_description.GrandBatteryPassive3" text="{=tor_engineer_battery_p3}Artillery Barrage shell impact radius is increased." />
+  <string id="tor_careerchoice_description.GrandBatteryPassive4" text="{=tor_engineer_battery_p4}Artillery Barrage fires +2 extra shells and cooldown is reduced by 5 seconds." />
 
   <string id="tor_engineer_cc_option" text="{=tor_engineer_cc_option}Imperial Engineer" />
   <string id="tor_engineer_cc_effect" text="{=tor_engineer_cc_effect}Engineer Career" />

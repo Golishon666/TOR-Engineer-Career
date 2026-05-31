@@ -1,10 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
+using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.Engine;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
+using TOR_Core.BattleMechanics.DamageSystem;
 using TOR_Core.Extensions;
+using TOR_Core.Utilities;
 
 namespace TOR_EngineerCareer
 {
@@ -18,15 +21,19 @@ namespace TOR_EngineerCareer
         private const float ShellHorizontalDriftMin = 8f;
         private const float ShellHorizontalDriftMax = 18f;
         private const float ImpactRadius = 4.2f;
+        private const float BurnTickInterval = 1f;
         private const float DamageVariance = 0.18f;
         private const float ShellVisualScale = 1.15f;
         private const string ShellMeshName = "cannonball_001";
         private const string ImpactParticle = "psys_fireball_explosion_1";
-        private const string ImpactSound = "mortar_explosion_1";
-        private const string SalvoSoundOne = "mortar_shot_1";
-        private const string SalvoSoundTwo = "mortar_shot_2";
+        private const string BurnParticle = "psys_game_burning_agent";
+        private const string RicochetSound = "mortar_traveling";
+
+        private static readonly string[] ImpactSounds = { "mortar_explosion_1", "mortar_explosion_2" };
+        private static readonly string[] SalvoSounds = { "mortar_shot_1", "mortar_shot_2" };
 
         private readonly List<ScheduledImpact> _scheduledImpacts = new();
+        private readonly List<BurningTarget> _burningTargets = new();
 
         public void QueueBarrage(Agent caster, Vec3 targetPosition, int guns)
         {
@@ -35,13 +42,12 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            var shellCount = EngineerArtilleryBarrageAbility.GetShellCount(guns);
-            var radius = EngineerArtilleryBarrageAbility.GetRadius(guns);
+            var shellCount = EngineerArtilleryBarrageAbility.GetShellCount(guns, caster);
+            var radius = EngineerArtilleryBarrageAbility.GetRadius(guns, caster);
             var damage = EngineerArtilleryBarrageAbility.GetImpactDamage(caster);
             var currentTime = Mission.Current.CurrentTime;
 
             targetPosition.z = Mission.Current.Scene.GetGroundHeightAtPosition(targetPosition);
-            PlaySalvoSound(caster.Position);
 
             for (var i = 0; i < shellCount; i++)
             {
@@ -52,6 +58,7 @@ namespace TOR_EngineerCareer
                     impactTime,
                     visualStartTime,
                     caster,
+                    GetLaunchSoundPosition(caster.Position),
                     GetShellStartPosition(impactPosition),
                     impactPosition,
                     damage));
@@ -60,12 +67,19 @@ namespace TOR_EngineerCareer
 
         public override void OnMissionTick(float dt)
         {
-            if (_scheduledImpacts.Count == 0 || Mission.Current == null)
+            if (Mission.Current == null)
             {
                 return;
             }
 
             var currentTime = Mission.Current.CurrentTime;
+            UpdateBurningTargets(currentTime);
+
+            if (_scheduledImpacts.Count == 0)
+            {
+                return;
+            }
+
             for (var i = _scheduledImpacts.Count - 1; i >= 0; i--)
             {
                 var impact = _scheduledImpacts[i];
@@ -89,6 +103,7 @@ namespace TOR_EngineerCareer
             }
 
             _scheduledImpacts.Clear();
+            _burningTargets.Clear();
             base.OnClearScene();
         }
 
@@ -111,11 +126,27 @@ namespace TOR_EngineerCareer
                 impactPosition.z + MBRandom.RandomFloatRanged(ShellSpawnHeightMin, ShellSpawnHeightMax));
         }
 
+        private static Vec3 GetLaunchSoundPosition(Vec3 casterPosition)
+        {
+            var angle = MBRandom.RandomFloatRanged(0f, (float)(System.Math.PI * 2.0));
+            var distance = MBRandom.RandomFloatRanged(3f, 12f);
+            return new Vec3(
+                casterPosition.x + (float)System.Math.Cos(angle) * distance,
+                casterPosition.y + (float)System.Math.Sin(angle) * distance,
+                casterPosition.z);
+        }
+
         private static void UpdateShellVisual(ScheduledImpact impact, float currentTime)
         {
             if (currentTime < impact.VisualStartTime || Mission.Current == null)
             {
                 return;
+            }
+
+            if (!impact.LaunchSoundPlayed)
+            {
+                PlayRandomSound(impact.LaunchSoundPosition, SalvoSounds);
+                impact.LaunchSoundPlayed = true;
             }
 
             if (impact.ProjectileEntity == null)
@@ -131,6 +162,12 @@ namespace TOR_EngineerCareer
             var progress = MBMath.ClampFloat((currentTime - impact.VisualStartTime) / duration, 0f, 1f);
             var easedProgress = progress * progress * (3f - 2f * progress);
             var position = impact.StartPosition + (impact.Position - impact.StartPosition) * easedProgress;
+
+            if (!impact.RicochetSoundPlayed && progress >= 0.45f)
+            {
+                PlaySound(position, RicochetSound);
+                impact.RicochetSoundPlayed = true;
+            }
 
             var frame = MatrixFrame.Identity;
             frame.origin = position;
@@ -175,7 +212,7 @@ namespace TOR_EngineerCareer
             impact.ProjectileEntity = null;
         }
 
-        private static void TriggerImpact(ScheduledImpact impact)
+        private void TriggerImpact(ScheduledImpact impact)
         {
             PlayImpactFeedback(impact.Position);
 
@@ -185,18 +222,21 @@ namespace TOR_EngineerCareer
                 return;
             }
 
+            var hero = caster.GetHero() ?? Hero.MainHero;
+            var impactRadius = ImpactRadius + EngineerCareerHelper.GetArtilleryBarrageImpactRadiusBonus(hero);
             var targets = Mission.Current
-                .GetNearbyAgents(impact.Position.AsVec2, ImpactRadius, new MBList<Agent>())
+                .GetNearbyAgents(impact.Position.AsVec2, impactRadius, new MBList<Agent>())
                 .Where(agent => IsValidTarget(agent, caster))
                 .ToList();
 
             foreach (var target in targets)
             {
                 var distance = target.Position.Distance(impact.Position);
-                var falloff = MBMath.ClampFloat(1f - distance / ImpactRadius, 0.35f, 1f);
+                var falloff = MBMath.ClampFloat(1f - distance / impactRadius, 0.35f, 1f);
                 var variance = MBRandom.RandomFloatRanged(1f - DamageVariance, 1f + DamageVariance);
                 var damage = MBMath.ClampInt((int)(impact.Damage * falloff * variance), 1, impact.Damage);
                 target.ApplyDamage(damage, impact.Position, caster, doBlow: true, hasShockWave: true, originatesFromAbility: true);
+                TryApplyBurn(target, caster);
             }
         }
 
@@ -210,10 +250,74 @@ namespace TOR_EngineerCareer
                    agent.IsEnemyOf(caster);
         }
 
-        private static void PlaySalvoSound(Vec3 position)
+        private void TryApplyBurn(Agent target, Agent caster)
         {
-            PlaySound(position, SalvoSoundOne);
-            PlaySound(position, SalvoSoundTwo);
+            var hero = caster?.GetHero() ?? Hero.MainHero;
+            if (!EngineerCareerHelper.ShouldArtilleryBarrageApplyBurn(hero))
+            {
+                return;
+            }
+
+            var duration = EngineerCareerHelper.GetArtilleryBarrageBurnDuration(hero);
+            var tickDamage = EngineerCareerHelper.GetArtilleryBarrageBurnDamage(caster);
+            var currentTime = Mission.Current.CurrentTime;
+            var existing = _burningTargets.FirstOrDefault(x => x.Target == target);
+            if (existing != null)
+            {
+                existing.EndTime = System.Math.Max(existing.EndTime, currentTime + duration);
+                existing.TickDamage = System.Math.Max(existing.TickDamage, tickDamage);
+                return;
+            }
+
+            _burningTargets.Add(new BurningTarget(target, caster, currentTime + duration, currentTime + BurnTickInterval, tickDamage));
+            AddBurnFeedback(target.Position);
+        }
+
+        private void UpdateBurningTargets(float currentTime)
+        {
+            if (_burningTargets.Count == 0 || Mission.Current == null)
+            {
+                return;
+            }
+
+            for (var i = _burningTargets.Count - 1; i >= 0; i--)
+            {
+                var burn = _burningTargets[i];
+                if (!IsValidBurnTarget(burn.Target, burn.Caster) || currentTime >= burn.EndTime)
+                {
+                    _burningTargets.RemoveAt(i);
+                    continue;
+                }
+
+                if (currentTime < burn.NextTickTime)
+                {
+                    continue;
+                }
+
+                TORMissionHelper.DamageAgents(
+                    new[] { burn.Target },
+                    burn.TickDamage,
+                    burn.TickDamage,
+                    burn.Caster,
+                    damageType: DamageType.Fire,
+                    hasShockWave: false,
+                    impactPosition: burn.Target.Position,
+                    originSpellTemplate: burn.Caster?.GetCareerAbility()?.Template);
+
+                AddBurnFeedback(burn.Target.Position);
+                burn.NextTickTime += BurnTickInterval;
+            }
+        }
+
+        private static bool IsValidBurnTarget(Agent target, Agent caster)
+        {
+            return target != null &&
+                   caster != null &&
+                   target.IsHuman &&
+                   target.IsActive() &&
+                   target.Health > 0f &&
+                   !target.IsFadingOut() &&
+                   target.IsEnemyOf(caster);
         }
 
         private static void PlaySound(Vec3 position, string soundName)
@@ -231,20 +335,35 @@ namespace TOR_EngineerCareer
             frame.origin = position;
             Mission.Current.AddParticleSystemBurstByName(ImpactParticle, frame, false);
 
-            var soundIndex = SoundEvent.GetEventIdFromString(ImpactSound);
-            if (soundIndex >= 0)
+            PlayRandomSound(position, ImpactSounds);
+        }
+
+        private static void AddBurnFeedback(Vec3 position)
+        {
+            var frame = MatrixFrame.Identity;
+            frame.origin = position;
+            Mission.Current.AddParticleSystemBurstByName(BurnParticle, frame, false);
+        }
+
+        private static void PlayRandomSound(Vec3 position, string[] soundNames)
+        {
+            if (soundNames == null || soundNames.Length == 0)
             {
-                Mission.Current.MakeSound(soundIndex, position, false, false, -1, -1);
+                return;
             }
+
+            var index = MBRandom.RandomInt(soundNames.Length);
+            PlaySound(position, soundNames[index]);
         }
 
         private sealed class ScheduledImpact
         {
-            public ScheduledImpact(float impactTime, float visualStartTime, Agent caster, Vec3 startPosition, Vec3 position, int damage)
+            public ScheduledImpact(float impactTime, float visualStartTime, Agent caster, Vec3 launchSoundPosition, Vec3 startPosition, Vec3 position, int damage)
             {
                 ImpactTime = impactTime;
                 VisualStartTime = visualStartTime;
                 Caster = caster;
+                LaunchSoundPosition = launchSoundPosition;
                 StartPosition = startPosition;
                 Position = position;
                 Damage = damage;
@@ -253,10 +372,31 @@ namespace TOR_EngineerCareer
             public float ImpactTime { get; }
             public float VisualStartTime { get; }
             public Agent Caster { get; }
+            public Vec3 LaunchSoundPosition { get; }
             public Vec3 StartPosition { get; }
             public Vec3 Position { get; }
             public int Damage { get; }
             public GameEntity ProjectileEntity { get; set; }
+            public bool LaunchSoundPlayed { get; set; }
+            public bool RicochetSoundPlayed { get; set; }
+        }
+
+        private sealed class BurningTarget
+        {
+            public BurningTarget(Agent target, Agent caster, float endTime, float nextTickTime, int tickDamage)
+            {
+                Target = target;
+                Caster = caster;
+                EndTime = endTime;
+                NextTickTime = nextTickTime;
+                TickDamage = tickDamage;
+            }
+
+            public Agent Target { get; }
+            public Agent Caster { get; }
+            public float EndTime { get; set; }
+            public float NextTickTime { get; set; }
+            public int TickDamage { get; set; }
         }
     }
 }

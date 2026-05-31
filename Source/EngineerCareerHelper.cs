@@ -19,6 +19,15 @@ namespace TOR_EngineerCareer
         public const string GrenadeExplosionId = "grenade_explosion";
         public const string DefaultArtilleryItemId = "tor_dw_artillery_cannon_001";
         public const int DefaultArtilleryCount = 2;
+        public const string IncendiaryFusesKeystone = "IncendiaryFusesKeystone";
+        public const string IncendiaryFusesPassive1 = "IncendiaryFusesPassive1";
+        public const string IncendiaryFusesPassive2 = "IncendiaryFusesPassive2";
+        public const string IncendiaryFusesPassive3 = "IncendiaryFusesPassive3";
+        public const string GrandBatteryKeystone = "GrandBatteryKeystone";
+        public const string GrandBatteryPassive1 = "GrandBatteryPassive1";
+        public const string GrandBatteryPassive2 = "GrandBatteryPassive2";
+        public const string GrandBatteryPassive3 = "GrandBatteryPassive3";
+        public const string GrandBatteryPassive4 = "GrandBatteryPassive4";
         public const float BaseOpenFireDuration = 15f;
         public const float PowderDrillDurationBonus = 5f;
         public const float RicochetTacticsDurationBonus = 5f;
@@ -36,7 +45,9 @@ namespace TOR_EngineerCareer
             "SuppressionFireKeystone",
             "GrenadierKeystone",
             "PiercingDoctrineKeystone",
-            "RicochetTacticsKeystone"
+            "RicochetTacticsKeystone",
+            IncendiaryFusesKeystone,
+            GrandBatteryKeystone
         };
 
         public static bool IsEngineerHero(Hero hero)
@@ -54,6 +65,11 @@ namespace TOR_EngineerCareer
         public static bool HasChoice(string choiceId)
         {
             return Hero.MainHero?.HasCareerChoice(choiceId) == true;
+        }
+
+        public static bool HasChoice(Hero hero, string choiceId)
+        {
+            return hero?.HasCareerChoice(choiceId) == true;
         }
 
         public static bool IsOpenFireActive(Agent agent)
@@ -109,6 +125,100 @@ namespace TOR_EngineerCareer
         public static float GetGrenadeMissileSpeedMultiplier()
         {
             return HasChoice("GrenadierPassive4") ? 1.3f : 1f;
+        }
+
+        public static int GetArtilleryBarrageMaxGunBonus(Hero hero)
+        {
+            return HasChoice(hero, GrandBatteryKeystone) ? 1 : 0;
+        }
+
+        public static int GetArtilleryBarrageShellsPerGunBonus(Hero hero)
+        {
+            return HasChoice(hero, GrandBatteryKeystone) ? 1 : 0;
+        }
+
+        public static int GetArtilleryBarrageFlatShellBonus(Hero hero)
+        {
+            var bonus = 0;
+            if (HasChoice(hero, GrandBatteryPassive1))
+            {
+                bonus += 2;
+            }
+
+            if (HasChoice(hero, GrandBatteryPassive4))
+            {
+                bonus += 2;
+            }
+
+            return bonus;
+        }
+
+        public static float GetArtilleryBarrageDamageMultiplier(Hero hero)
+        {
+            var multiplier = 1f;
+            if (HasChoice(hero, IncendiaryFusesPassive1))
+            {
+                multiplier += 0.10f;
+            }
+
+            if (HasChoice(hero, GrandBatteryPassive2))
+            {
+                multiplier += 0.10f;
+            }
+
+            return multiplier;
+        }
+
+        public static float GetArtilleryBarrageImpactRadiusBonus(Hero hero)
+        {
+            return HasChoice(hero, GrandBatteryPassive3) ? 0.6f : 0f;
+        }
+
+        public static int GetArtilleryBarrageCooldown(Hero hero)
+        {
+            var cooldown = EngineerArtilleryBarrageAbility.CooldownSeconds;
+            if (HasChoice(hero, IncendiaryFusesPassive3))
+            {
+                cooldown -= 5;
+            }
+
+            if (HasChoice(hero, GrandBatteryPassive4))
+            {
+                cooldown -= 5;
+            }
+
+            return MBMath.ClampInt(cooldown, 25, EngineerArtilleryBarrageAbility.CooldownSeconds);
+        }
+
+        public static bool ShouldArtilleryBarrageApplyBurn(Hero hero)
+        {
+            return HasChoice(hero, IncendiaryFusesKeystone);
+        }
+
+        public static float GetArtilleryBarrageBurnDuration(Hero hero)
+        {
+            var duration = 4f;
+            if (HasChoice(hero, IncendiaryFusesPassive2))
+            {
+                duration += 2f;
+            }
+
+            return duration;
+        }
+
+        public static int GetArtilleryBarrageBurnDamage(Agent caster)
+        {
+            var hero = caster?.GetHero() ?? Hero.MainHero;
+            var engineering = hero?.GetSkillValue(DefaultSkills.Engineering) ?? 0;
+            var gunpowderSkill = GetGunpowderSkill();
+            var gunpowder = hero == null || gunpowderSkill == null ? 0 : hero.GetSkillValue(gunpowderSkill);
+            var damage = 7f + engineering * 0.03f + gunpowder * 0.025f;
+            if (HasChoice(hero, IncendiaryFusesPassive2))
+            {
+                damage *= 1.15f;
+            }
+
+            return MBMath.ClampInt((int)damage, 5, 22);
         }
 
         public static bool ShouldRefundGrenade(Agent triggererAgent, int killCount)

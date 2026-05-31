@@ -72,24 +72,32 @@ namespace TOR_EngineerCareer
                 return 0;
             }
 
-            var artilleryLimit = Math.Max(1, party.GetMaxNumberOfArtillery());
-            return MBMath.ClampInt(Math.Min(inventoryCount, artilleryLimit), 1, MaxGuns);
+            var maxGunBonus = EngineerCareerHelper.GetArtilleryBarrageMaxGunBonus(hero);
+            var artilleryLimit = Math.Max(1, party.GetMaxNumberOfArtillery() + maxGunBonus);
+            var effectiveMaxGuns = GetEffectiveMaxGuns(hero);
+            return MBMath.ClampInt(Math.Min(inventoryCount, artilleryLimit), 1, effectiveMaxGuns);
         }
 
-        public static float GetRadius(int guns)
+        public static float GetRadius(int guns, Agent caster = null)
         {
             if (guns <= 1)
             {
                 return MinRadius;
             }
 
-            var progress = (float)(guns - 1) / (MaxGuns - 1);
+            var hero = caster?.GetHero() ?? Hero.MainHero;
+            var effectiveMaxGuns = GetEffectiveMaxGuns(hero);
+            var progress = (float)(guns - 1) / (effectiveMaxGuns - 1);
             return MBMath.ClampFloat(MinRadius + (MaxRadius - MinRadius) * progress, MinRadius, MaxRadius);
         }
 
-        public static int GetShellCount(int guns)
+        public static int GetShellCount(int guns, Agent caster = null)
         {
-            return BaseShells + MBMath.ClampInt(guns, 1, MaxGuns) * ShellsPerGun;
+            var hero = caster?.GetHero() ?? Hero.MainHero;
+            var effectiveMaxGuns = GetEffectiveMaxGuns(hero);
+            var clampedGuns = MBMath.ClampInt(guns, 1, effectiveMaxGuns);
+            var shellsPerGun = ShellsPerGun + EngineerCareerHelper.GetArtilleryBarrageShellsPerGunBonus(hero);
+            return BaseShells + EngineerCareerHelper.GetArtilleryBarrageFlatShellBonus(hero) + clampedGuns * shellsPerGun;
         }
 
         public static int GetImpactDamage(Agent caster)
@@ -103,7 +111,13 @@ namespace TOR_EngineerCareer
             var engineering = hero.GetSkillValue(DefaultSkills.Engineering);
             var gunpowderSkill = EngineerCareerHelper.GetGunpowderSkill();
             var gunpowder = gunpowderSkill == null ? 0 : hero.GetSkillValue(gunpowderSkill);
-            return MBMath.ClampInt((int)(MinDamage + engineering * 0.25f + gunpowder * 0.20f), MinDamage, MaxDamage);
+            var damage = (MinDamage + engineering * 0.25f + gunpowder * 0.20f) * EngineerCareerHelper.GetArtilleryBarrageDamageMultiplier(hero);
+            return MBMath.ClampInt((int)damage, MinDamage, MaxDamage);
+        }
+
+        public static int GetEffectiveMaxGuns(Hero hero)
+        {
+            return MaxGuns + EngineerCareerHelper.GetArtilleryBarrageMaxGunBonus(hero);
         }
 
         public static bool CanUse(Agent caster, out TextObject disabledReason, out int guns)
@@ -128,11 +142,12 @@ namespace TOR_EngineerCareer
         private static AbilityTemplate CreateTemplate(int guns)
         {
             var radius = GetRadius(guns);
+            var hero = Hero.MainHero;
             return new AbilityTemplate(AbilityId)
             {
                 Name = "{=tor_engineer_artillery_barrage}Artillery Barrage",
                 SpriteName = EngineerCareerHelper.ArtilleryBarrageIconSprite,
-                CoolDown = CooldownSeconds,
+                CoolDown = EngineerCareerHelper.GetArtilleryBarrageCooldown(hero),
                 WindsOfMagicCost = 0,
                 BaseMisCastChance = 0f,
                 Duration = 0.5f,
@@ -159,7 +174,7 @@ namespace TOR_EngineerCareer
                 MinDistance = MinTargetDistance,
                 MaxDistance = MaxTargetDistance,
                 TargetCapturingRadius = radius,
-                TooltipDescription = "{=tor_engineer_artillery_barrage_desc}Call in an inaccurate artillery barrage. Requires deployable artillery in the party. More artillery increases the strike radius and number of shells."
+                TooltipDescription = "{=tor_engineer_artillery_barrage_desc}Call in an inaccurate artillery barrage. Requires deployable artillery in the party. More artillery increases the strike radius and number of shells. Incendiary Fuses and Grand Battery career branches improve the barrage."
             };
         }
     }
