@@ -22,8 +22,12 @@ namespace TOR_EngineerCareer
         private const float MouseWorldWidthAtMaxZoom = 145f;
         private const float ImpactRadius = 5f;
         private const float MaxCommandRange = 600f;
+        private const float TrajectoryRibbonWidth = 0.55f;
+        private const float ImpactCircleRibbonWidth = 0.35f;
         private const uint ValidColor = 0xFF20FF40;
         private const uint BlockedColor = 0xFFFF3030;
+        private const uint AllyContourColor = 0xFF35B6FF;
+        private const uint ArtilleryContourColor = 0xFFFFE060;
         private const uint PanelColor = 0xDDE8E8E8;
 
         private static readonly InputKey ToggleControlModifierKey = InputKey.LeftAlt;
@@ -32,6 +36,8 @@ namespace TOR_EngineerCareer
 
         private readonly HashSet<MissionObject> _initialMissionObjects = new();
         private readonly List<RangedSiegeWeapon> _playerArtillery = new();
+        private readonly HashSet<Agent> _highlightedAllies = new();
+        private readonly HashSet<RangedSiegeWeapon> _highlightedArtillery = new();
         private readonly EngineerArtilleryControlVM _viewModel;
 
         private bool _isControlModeActive;
@@ -41,6 +47,8 @@ namespace TOR_EngineerCareer
         private Vec3 _cameraTarget = Vec3.Zero;
         private Vec3 _aimTarget = Vec3.Invalid;
         private Vec3 _pendingFireTarget = Vec3.Invalid;
+        private GameEntity _overlayEntity;
+        private Mesh _overlayMesh;
         private MatrixFrame _previousCameraFrame = MatrixFrame.Identity;
         private Vec3 _previousCustomCameraTargetLocalOffset = Vec3.Zero;
         private Vec3 _previousCustomCameraLocalOffset = Vec3.Zero;
@@ -114,6 +122,7 @@ namespace TOR_EngineerCareer
                 return;
             }
 
+            UpdateHighlights();
             RenderAimPreview();
             RenderControlPanel();
             ApplyControlCamera();
@@ -224,6 +233,8 @@ namespace TOR_EngineerCareer
             _aimTarget = Vec3.Invalid;
             _pendingFireTarget = Vec3.Invalid;
             _pendingFireWeapon = null;
+            ClearHighlights();
+            RemoveOverlayEntity();
 
             if (Mission != null)
             {
@@ -305,22 +316,22 @@ namespace TOR_EngineerCareer
         {
             var input = Mission.InputManager;
             var move = Vec3.Zero;
-            if (input.IsKeyDown(InputKey.W))
+            if (input.IsKeyDown(InputKey.Up) || input.IsKeyDown(InputKey.Numpad8))
             {
                 move.y += 1f;
             }
 
-            if (input.IsKeyDown(InputKey.S))
+            if (input.IsKeyDown(InputKey.Down) || input.IsKeyDown(InputKey.Numpad2))
             {
                 move.y -= 1f;
             }
 
-            if (input.IsKeyDown(InputKey.D))
+            if (input.IsKeyDown(InputKey.Right) || input.IsKeyDown(InputKey.Numpad6))
             {
                 move.x += 1f;
             }
 
-            if (input.IsKeyDown(InputKey.A))
+            if (input.IsKeyDown(InputKey.Left) || input.IsKeyDown(InputKey.Numpad4))
             {
                 move.x -= 1f;
             }
@@ -572,6 +583,7 @@ namespace TOR_EngineerCareer
 
         private void RenderAimPreview()
         {
+            ClearOverlayMesh();
             var weapon = GetNextReadyWeapon();
             if (weapon == null || !_aimTarget.IsValid)
             {
@@ -579,9 +591,11 @@ namespace TOR_EngineerCareer
             }
 
             var color = _aimState == AimState.Valid ? ValidColor : BlockedColor;
+            EnsureOverlayEntity();
             RenderTrajectory(weapon, GetWeaponOrigin(weapon), _aimTarget, color);
             RenderImpactCircle(_aimTarget, ImpactRadius, color);
-            MBDebug.RenderDebugSphere(_aimTarget + new Vec3(0f, 0f, 0.35f), 0.45f, color, false, 0f);
+            _overlayMesh?.ComputeNormals();
+            _overlayMesh?.UpdateBoundingBox();
         }
 
         private void RenderTrajectory(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target, uint color)
@@ -595,7 +609,7 @@ namespace TOR_EngineerCareer
                 var t = i / (float)segments;
                 var point = Vec3.Lerp(origin, target, t);
                 point.z += MathF.Sin(t * MathF.PI) * arcHeight;
-                MBDebug.RenderDebugLine(last, point, color, false, 0f);
+                AddRibbonSegment(last, point, TrajectoryRibbonWidth, color);
                 last = point;
             }
         }
@@ -647,9 +661,93 @@ namespace TOR_EngineerCareer
             for (var i = 1; i <= segments; i++)
             {
                 var current = CirclePoint(center, radius, i / (float)segments);
-                MBDebug.RenderDebugLine(last, current, color, false, 0f);
+                AddRibbonSegment(last, current, ImpactCircleRibbonWidth, color);
                 last = current;
             }
+        }
+
+        private void EnsureOverlayEntity()
+        {
+            if (_overlayEntity != null && _overlayMesh != null)
+            {
+                return;
+            }
+
+            var material = Material.GetDefaultMaterial();
+            _overlayMesh = Mesh.CreateMeshWithMaterial(material);
+            _overlayMesh.Name = "tor_engineer_artillery_overlay_mesh";
+            _overlayMesh.SetMeshRenderOrder(200);
+            _overlayMesh.HintVerticesDynamic();
+            _overlayMesh.HintIndicesDynamic();
+
+            _overlayEntity = GameEntity.CreateEmpty(Mission.Scene, false, true, true);
+            _overlayEntity.Name = "tor_engineer_artillery_overlay";
+            _overlayEntity.AddMesh(_overlayMesh, true);
+            var frame = MatrixFrame.Identity;
+            _overlayEntity.SetFrame(ref frame, true);
+            _overlayEntity.SetVisibilityExcludeParents(true);
+            _overlayEntity.SetReadyToRender(true);
+        }
+
+        private void ClearOverlayMesh()
+        {
+            _overlayMesh?.ClearMesh();
+        }
+
+        private void RemoveOverlayEntity()
+        {
+            try
+            {
+                _overlayEntity?.Remove(0);
+            }
+            catch (Exception ex)
+            {
+                SubModule.Log($"Failed to remove artillery overlay entity: {ex}");
+            }
+
+            _overlayEntity = null;
+            _overlayMesh = null;
+        }
+
+        private void AddRibbonSegment(Vec3 start, Vec3 end, float width, uint color)
+        {
+            if (_overlayMesh == null)
+            {
+                return;
+            }
+
+            var direction = end - start;
+            if (direction.LengthSquared < 0.001f)
+            {
+                return;
+            }
+
+            direction.Normalize();
+            var side = Vec3.CrossProduct(direction, Vec3.Up);
+            if (side.LengthSquared < 0.001f)
+            {
+                side = Vec3.Side;
+            }
+
+            side.Normalize();
+            side *= width * 0.5f;
+
+            var normal = Vec3.Up;
+            var uv0 = new Vec2(0f, 0f);
+            var uv1 = new Vec2(1f, 0f);
+            var uv2 = new Vec2(1f, 1f);
+            var uv3 = new Vec2(0f, 1f);
+
+            var a = start - side;
+            var b = start + side;
+            var c = end + side;
+            var d = end - side;
+            _overlayMesh.AddTriangleWithVertexColors(a, b, c, uv0, uv1, uv2, color, color, color, UIntPtr.Zero);
+            _overlayMesh.AddTriangleWithVertexColors(a, c, d, uv0, uv2, uv3, color, color, color, UIntPtr.Zero);
+
+            var verticalOffset = new Vec3(0f, 0f, width * 0.75f);
+            _overlayMesh.AddTriangleWithVertexColors(a + verticalOffset, b + verticalOffset, c + verticalOffset, uv0, uv1, uv2, color, color, color, UIntPtr.Zero);
+            _overlayMesh.AddTriangleWithVertexColors(a + verticalOffset, c + verticalOffset, d + verticalOffset, uv0, uv2, uv3, color, color, color, UIntPtr.Zero);
         }
 
         private Vec3 CirclePoint(Vec3 center, float radius, float t)
@@ -664,7 +762,7 @@ namespace TOR_EngineerCareer
         {
             MBDebug.RenderDebugText(0.035f, 0.78f, "ENGINEER ARTILLERY CONTROL", PanelColor, 0.95f);
             var pending = _pendingFireWeapon == null ? string.Empty : " | LINING UP";
-            MBDebug.RenderDebugText(0.035f, 0.815f, $"Alt+X/Esc: exit | LMB: fire | Aim: {_aimState}{pending}", PanelColor, 0.8f);
+            MBDebug.RenderDebugText(0.035f, 0.815f, $"Alt+X/Esc: exit | Arrows: pan | LMB: fire | Aim: {_aimState}{pending}", PanelColor, 0.8f);
 
             var y = 0.85f;
             for (var i = 0; i < _playerArtillery.Count; i++)
@@ -688,6 +786,72 @@ namespace TOR_EngineerCareer
             return weapon.GameEntity.GlobalPosition + new Vec3(0f, 0f, 2f);
         }
 
+        private void UpdateHighlights()
+        {
+            var mainAgent = Mission?.MainAgent;
+            if (mainAgent?.Team == null)
+            {
+                return;
+            }
+
+            foreach (var agent in Mission.Agents)
+            {
+                if (agent == null ||
+                    !agent.IsHuman ||
+                    !agent.IsActive() ||
+                    agent.Team != mainAgent.Team ||
+                    _highlightedAllies.Contains(agent))
+                {
+                    continue;
+                }
+
+                agent.AgentVisuals?.SetContourColor(AllyContourColor, true);
+                _highlightedAllies.Add(agent);
+            }
+
+            foreach (var weapon in _playerArtillery)
+            {
+                if (weapon?.GameEntity == null || _highlightedArtillery.Contains(weapon))
+                {
+                    continue;
+                }
+
+                weapon.GameEntity.SetContourColor(ArtilleryContourColor, true);
+                _highlightedArtillery.Add(weapon);
+            }
+        }
+
+        private void ClearHighlights()
+        {
+            foreach (var agent in _highlightedAllies)
+            {
+                try
+                {
+                    agent?.AgentVisuals?.SetContourColor(null, true);
+                }
+                catch
+                {
+                }
+            }
+
+            foreach (var weapon in _highlightedArtillery)
+            {
+                try
+                {
+                    if (weapon != null)
+                    {
+                        weapon.GameEntity.SetContourColor(null, true);
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            _highlightedAllies.Clear();
+            _highlightedArtillery.Clear();
+        }
+
         private void RefreshViewModel()
         {
             _viewModel.IsControlModeActive = _isControlModeActive;
@@ -695,7 +859,7 @@ namespace TOR_EngineerCareer
             _viewModel.AimState = _aimState.ToString();
             _viewModel.ArtillerySummary = BuildArtillerySummary();
             _viewModel.StatusText = _isControlModeActive
-                ? "Alt+X/Esc exits. LMB fires one ready gun."
+                ? "Alt+X/Esc exits. Arrow keys pan. LMB fires one ready gun."
                 : "Alt+X opens artillery control when deployed artillery is available.";
         }
 
