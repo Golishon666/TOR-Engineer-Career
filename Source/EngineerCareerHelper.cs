@@ -177,7 +177,7 @@ namespace TOR_EngineerCareer
 
         public static float GetArtilleryBarrageOpenFireCharge(int damage)
         {
-            return MBMath.ClampFloat(damage, 5f, 110f);
+            return damage;
         }
 
         public static float GetArtilleryBarrageImpactRadiusBonus(Hero hero)

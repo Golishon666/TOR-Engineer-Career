@@ -43,10 +43,7 @@ namespace TOR_EngineerCareer
                 return 0f;
             }
 
-            chargeValue = Math.Min(150, chargeValue);
-
             var explainedNumber = new ExplainedNumber(chargeValue);
-            explainedNumber.LimitMax(75);
             explainedNumber.LimitMin(1);
 
             if (collisionFlag == CareerHelper.ChargeCollisionFlag.HeadShot &&
