@@ -96,7 +96,7 @@ namespace TOR_EngineerCareer
                 MutateStatusAdd("let_them_have_it_range_dmg", 0.15f));
 
             Keystone("RicochetTactics",
-                "During Open Fire!, firearm hits ricochet into nearby enemies and explode on impact. Each keystone talent adds another ricochet.",
+                "During Open Fire!, firearm hits ricochet into nearby enemies. Each ricochet has a 50% chance to explode on impact. Each keystone talent adds another ricochet.",
                 CombineMutations(
                     MutateAbilityFloat(nameof(AbilityTemplate.Duration), EngineerCareerHelper.RicochetTacticsDurationBonus),
                     MutateTriggeredEffectFloat("apply_let_them_have_it", nameof(TriggeredEffectTemplate.Radius), 2f)));
@@ -145,7 +145,7 @@ namespace TOR_EngineerCareer
             Passive("RicochetTactics", 1, "+6 extra ammo per ammunition pouch.", Ammo());
             Passive("RicochetTactics", 2, "+15% personal ranged physical resistance.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Resistance, new DamageProportionTuple(DamageType.Physical, 15), AttackTypeMask.Ranged));
             Passive("RicochetTactics", 3, "+15% personal firearm accuracy.", new CareerChoiceObject.PassiveEffect(-15, PassiveEffectType.AccuracyPenalty, true));
-            Passive("RicochetTactics", 4, "Firearm hits ricochet once even without Open Fire! and explode on impact. Buckshot fires +3 extra pellets.", SpecialPassive());
+            Passive("RicochetTactics", 4, "Firearm hits ricochet once even without Open Fire! Each ricochet has a 50% chance to explode on impact. Buckshot fires +3 extra pellets.", SpecialPassive());
 
             Passive("IncendiaryFuses", 1, "+10% Artillery Barrage impact damage. Shell impacts ignite enemies and charge Open Fire!", SpecialPassive());
             Passive("IncendiaryFuses", 2, "Artillery Barrage burning lasts +2 seconds and is applied twice for a heavier burn.", SpecialPassive());
