@@ -473,7 +473,6 @@ namespace TOR_EngineerCareer
             else
             {
                 ManualShotAllowedArtillery.Remove(weapon);
-                ManualShotTargets.Remove(weapon);
             }
         }
 
@@ -486,6 +485,14 @@ namespace TOR_EngineerCareer
 
             target = Vec3.Invalid;
             return false;
+        }
+
+        internal static void ClearManualShotTarget(RangedSiegeWeapon weapon)
+        {
+            if (weapon != null)
+            {
+                ManualShotTargets.Remove(weapon);
+            }
         }
 
         internal static Vec3 GetWeaponOrigin(RangedSiegeWeapon weapon)

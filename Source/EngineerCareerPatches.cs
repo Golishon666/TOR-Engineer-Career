@@ -30,6 +30,7 @@ namespace TOR_EngineerCareer
         }
     }
 
+    [HarmonyPatch]
     internal static class EngineerArtilleryProjectileDirectionPatch
     {
         private static IEnumerable<MethodBase> TargetMethods()
@@ -54,17 +55,24 @@ namespace TOR_EngineerCareer
                 return;
             }
 
-            var origin = EngineerArtilleryControlMissionLogic.GetWeaponOrigin(__instance);
-            direction = EngineerArtilleryControlMissionLogic.GetManualTrajectoryDirection(__instance, origin, target);
-            if (direction.LengthSquared < 0.001f)
+            try
             {
-                return;
+                var origin = EngineerArtilleryControlMissionLogic.GetWeaponOrigin(__instance);
+                direction = EngineerArtilleryControlMissionLogic.GetManualTrajectoryDirection(__instance, origin, target);
+                if (direction.LengthSquared < 0.001f)
+                {
+                    return;
+                }
+
+                direction.Normalize();
+                orientation = Mat3.CreateMat3WithForward(in direction);
+
+                missileShootingSpeed = MathF.Max(missileShootingSpeed, missileBaseSpeed);
             }
-
-            direction.Normalize();
-            orientation = Mat3.CreateMat3WithForward(in direction);
-
-            missileShootingSpeed = MathF.Max(missileShootingSpeed, missileBaseSpeed);
+            finally
+            {
+                EngineerArtilleryControlMissionLogic.ClearManualShotTarget(__instance);
+            }
         }
     }
 
