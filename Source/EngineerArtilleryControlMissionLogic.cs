@@ -25,7 +25,7 @@ namespace TOR_EngineerCareer
         private const float MaxCommandRange = 600f;
         private const float TrajectoryRibbonWidth = 1.8f;
         private const float ImpactCircleRibbonWidth = 1.15f;
-        private const float TrajectoryVisualLift = 1.6f;
+        internal const float TrajectoryVisualLift = 1.6f;
         private const float ImpactCircleVisualLift = 0.75f;
         private const float PendingAimTimeout = 4f;
         private const uint ValidColor = 0xFF20FF40;
@@ -985,7 +985,21 @@ namespace TOR_EngineerCareer
             }
         }
 
-        private float GetTrajectoryArcHeight(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target)
+        internal static Vec3 GetManualTrajectoryDirection(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target)
+        {
+            var arcHeight = GetTrajectoryArcHeight(weapon, origin, target);
+            var direction = target - origin;
+            direction.z += MathF.PI * arcHeight;
+            if (direction.LengthSquared < 0.001f)
+            {
+                return Vec3.Forward;
+            }
+
+            direction.Normalize();
+            return direction;
+        }
+
+        private static float GetTrajectoryArcHeight(RangedSiegeWeapon weapon, Vec3 origin, Vec3 target)
         {
             var distance = origin.Distance(target);
             if (IsHighArcArtillery(weapon))

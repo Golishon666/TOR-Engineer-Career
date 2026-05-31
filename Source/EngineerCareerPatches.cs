@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
@@ -29,9 +30,18 @@ namespace TOR_EngineerCareer
         }
     }
 
-    [HarmonyPatch(typeof(RangedSiegeWeapon), "SetupProjectileToShoot")]
     internal static class EngineerArtilleryProjectileDirectionPatch
     {
+        private static IEnumerable<MethodBase> TargetMethods()
+        {
+            return AccessTools.AllTypes()
+                .Where(type => type != null && typeof(RangedSiegeWeapon).IsAssignableFrom(type))
+                .Select(type => AccessTools.Method(type, "SetupProjectileToShoot"))
+                .Where(method => method != null)
+                .Cast<MethodBase>()
+                .Distinct();
+        }
+
         private static void Postfix(
             RangedSiegeWeapon __instance,
             ref Vec3 direction,
@@ -45,18 +55,12 @@ namespace TOR_EngineerCareer
             }
 
             var origin = EngineerArtilleryControlMissionLogic.GetWeaponOrigin(__instance);
-            var flat = target - origin;
-            flat.z = 0f;
-            if (flat.LengthSquared < 0.001f)
+            direction = EngineerArtilleryControlMissionLogic.GetManualTrajectoryDirection(__instance, origin, target);
+            if (direction.LengthSquared < 0.001f)
             {
                 return;
             }
 
-            flat.Normalize();
-            var releaseAngle = __instance.GetTargetReleaseAngle(target);
-            var horizontal = MathF.Cos(releaseAngle);
-            var vertical = MathF.Sin(releaseAngle);
-            direction = (flat * horizontal) + new Vec3(0f, 0f, vertical);
             direction.Normalize();
             orientation = Mat3.CreateMat3WithForward(in direction);
 
