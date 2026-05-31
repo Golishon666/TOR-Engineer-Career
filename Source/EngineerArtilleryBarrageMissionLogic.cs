@@ -13,7 +13,6 @@ namespace TOR_EngineerCareer
 {
     internal sealed class EngineerArtilleryBarrageMissionLogic : MissionLogic
     {
-        private const float FirstImpactDelay = 0.7f;
         private const float MaxRandomImpactDelay = 5f;
         private const float ShellFlightTime = 1.4f;
         private const float ShellSpawnHeightMin = 48f;
@@ -24,7 +23,6 @@ namespace TOR_EngineerCareer
         private const float DamageVariance = 0.18f;
         private const float GunpowderXpPerDamage = 0.35f;
         private const float EngineeringXpPerDamage = 0.45f;
-        private const int MaxOpeningSalvoSounds = 10;
         private const float ShellVisualScale = 1.15f;
         private const string ShellMeshName = "cannonball_001";
         private const string ImpactParticle = "psys_fireball_explosion_1";
@@ -50,14 +48,13 @@ namespace TOR_EngineerCareer
             var currentTime = Mission.Current.CurrentTime;
 
             targetPosition.z = Mission.Current.Scene.GetGroundHeightAtPosition(targetPosition);
-            PlayOpeningSalvo(targetPosition, shellCount);
 
             for (var i = 0; i < shellCount; i++)
             {
                 var impactPosition = GetRandomImpactPosition(targetPosition, radius);
                 var startPosition = GetShellStartPosition(impactPosition);
-                var impactTime = currentTime + FirstImpactDelay + MBRandom.RandomFloatRanged(0f, MaxRandomImpactDelay);
-                var visualStartTime = MBMath.ClampFloat(impactTime - ShellFlightTime, currentTime, impactTime);
+                var visualStartTime = currentTime + GetStaggeredLaunchDelay(i, shellCount);
+                var impactTime = visualStartTime + ShellFlightTime;
                 _scheduledImpacts.Add(new ScheduledImpact(
                     impactTime,
                     visualStartTime,
@@ -133,6 +130,19 @@ namespace TOR_EngineerCareer
                 impactPosition.x + (float)System.Math.Cos(angle) * distance,
                 impactPosition.y + (float)System.Math.Sin(angle) * distance,
                 impactPosition.z + MBRandom.RandomFloatRanged(ShellSpawnHeightMin, ShellSpawnHeightMax));
+        }
+
+        private static float GetStaggeredLaunchDelay(int shellIndex, int shellCount)
+        {
+            if (shellCount <= 1)
+            {
+                return 0f;
+            }
+
+            var progress = shellIndex / (float)(shellCount - 1);
+            var baseDelay = progress * MaxRandomImpactDelay;
+            var jitter = MBRandom.RandomFloatRanged(-0.35f, 0.35f);
+            return MBMath.ClampFloat(baseDelay + jitter, 0f, MaxRandomImpactDelay);
         }
 
         private void UpdateShellVisual(ScheduledImpact impact, float currentTime)
@@ -300,16 +310,6 @@ namespace TOR_EngineerCareer
             Mission.Current.AddParticleSystemBurstByName(ImpactParticle, frame, false);
 
             PlayRandomSound(position, ImpactSounds);
-        }
-
-        private void PlayOpeningSalvo(Vec3 position, int shellCount)
-        {
-            var salvoSounds = MBMath.ClampInt(shellCount, 1, MaxOpeningSalvoSounds);
-            var audiblePosition = GetAudibleSoundPosition(position);
-            for (var i = 0; i < salvoSounds; i++)
-            {
-                PlayRandomManagedSound(audiblePosition, SalvoSounds);
-            }
         }
 
         private static void TryChargeOpenFireFromBarrage(Agent caster, int damage)
