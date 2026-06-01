@@ -23,20 +23,6 @@ namespace TOR_EngineerCareer
             EquipmentIndex.Gloves,
             EquipmentIndex.Leg
         ];
-        private static readonly EquipmentIndex[] AgentEquipmentUpgradeSlots =
-        [
-            EquipmentIndex.Weapon0,
-            EquipmentIndex.Weapon1,
-            EquipmentIndex.Weapon2,
-            EquipmentIndex.Weapon3,
-            EquipmentIndex.ExtraWeaponSlot,
-            EquipmentIndex.Head,
-            EquipmentIndex.Body,
-            EquipmentIndex.Cape,
-            EquipmentIndex.Gloves,
-            EquipmentIndex.Leg
-        ];
-
         public static int CountEquippedFieldMedkits(Hero hero)
         {
             return CountEquippedUpgrade(hero, EngineerEquipmentUpgradeCatalog.FieldMedkitUpgradeId);
@@ -82,9 +68,13 @@ namespace TOR_EngineerCareer
             }
 
             var count = 0;
-            foreach (var slot in AgentEquipmentUpgradeSlots)
+            foreach (var slot in EquipmentUpgradeSlots)
             {
-                var element = agent.Equipment[slot];
+                if (!TryGetAgentEquipmentElement(agent, slot, out var element))
+                {
+                    continue;
+                }
+
                 if (!element.IsEmpty &&
                     element.Item != null &&
                     EngineerEquipmentUpgradeCatalog.GetEngineerUpgradeIds(element.Item).Contains(upgradeId))
@@ -124,6 +114,20 @@ namespace TOR_EngineerCareer
             return agent != null &&
                    LastGrenadeUpgradeIdsByAgent.TryGetValue(agent.Index, out var ids) &&
                    ids.Contains(upgradeId);
+        }
+
+        private static bool TryGetAgentEquipmentElement(Agent agent, EquipmentIndex slot, out MissionWeapon element)
+        {
+            try
+            {
+                element = agent.Equipment[slot];
+                return true;
+            }
+            catch
+            {
+                element = default;
+                return false;
+            }
         }
     }
 }

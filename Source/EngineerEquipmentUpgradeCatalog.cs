@@ -98,12 +98,12 @@ namespace TOR_EngineerCareer
             {
                 Id = "eng_upgrade_armor_blast_padding",
                 Name = "Blast Padding",
-                Description = "+8% fire resistance.",
+                Description = "+30% fire resistance.",
                 Category = EngineerEquipmentUpgradeCategory.Armor,
                 Tier = 2,
                 IngredientType = TorTradeGoodType.AmberCrystal,
                 ResistanceType = DamageType.Fire,
-                ResistanceValue = 8f
+                ResistanceValue = 0.30f
             },
             new EngineerEquipmentUpgradeDefinition
             {

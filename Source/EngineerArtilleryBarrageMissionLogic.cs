@@ -98,19 +98,13 @@ namespace TOR_EngineerCareer
 
         public override void OnClearScene()
         {
-            foreach (var impact in _scheduledImpacts)
-            {
-                RemoveShellVisual(impact);
-            }
-
-            _scheduledImpacts.Clear();
-            ReleaseAllSounds();
+            ClearRuntimeState();
             base.OnClearScene();
         }
 
         protected override void OnEndMission()
         {
-            ReleaseAllSounds();
+            ClearRuntimeState();
         }
 
         private static Vec3 GetRandomImpactPosition(Vec3 center, float radius)
@@ -249,6 +243,8 @@ namespace TOR_EngineerCareer
                 TryChargeOpenFireFromBarrage(caster, damage);
                 TryApplyBurn(target, caster);
             }
+
+            EngineerGrenadeExplosionPatch.RegisterExplosionKills(caster, targets.Count(target => !target.IsActive() || target.Health <= 0f));
         }
 
         private static bool IsValidTarget(Agent agent, Agent caster)
@@ -459,6 +455,17 @@ namespace TOR_EngineerCareer
             }
 
             _activeSounds.Clear();
+        }
+
+        private void ClearRuntimeState()
+        {
+            foreach (var impact in _scheduledImpacts)
+            {
+                RemoveShellVisual(impact);
+            }
+
+            _scheduledImpacts.Clear();
+            ReleaseAllSounds();
         }
 
         private sealed class ScheduledImpact

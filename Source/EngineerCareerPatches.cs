@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.CampaignSystem.Inventory;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
@@ -11,7 +10,6 @@ using TOR_Core.BattleMechanics.TriggeredEffect;
 using TOR_Core.CampaignMechanics.Choices;
 using TOR_Core.CharacterDevelopment;
 using TOR_Core.Extensions;
-using TOR_Core.Items;
 using TOR_Core.Models;
 
 namespace TOR_EngineerCareer
@@ -69,6 +67,8 @@ namespace TOR_EngineerCareer
     [HarmonyPatch(typeof(TORAgentStatCalculateModel), nameof(TORAgentStatCalculateModel.UpdateAgentStats))]
     internal static class EngineerGrenadeAmmoPatch
     {
+        private static readonly Dictionary<int, HashSet<int>> InitializedGrenadeSlotsByAgent = new();
+
         private static void Postfix(Agent agent)
         {
             if (!EngineerCareerHelper.IsEngineerMainAgent(agent) || !EngineerCareerHelper.HasChoice("GrenadierPassive1"))
@@ -96,6 +96,11 @@ namespace TOR_EngineerCareer
                     continue;
                 }
 
+                if (!TryMarkInitialized(agent.Index, i))
+                {
+                    continue;
+                }
+
                 var baseAmount = missionWeapon.Item?.PrimaryWeapon?.MaxDataValue ?? missionWeapon.Amount;
                 var targetAmount = (short)(baseAmount + bonus);
                 if (missionWeapon.Amount != targetAmount)
@@ -103,6 +108,28 @@ namespace TOR_EngineerCareer
                     agent.SetWeaponAmountInSlot(index, targetAmount, true);
                 }
             }
+        }
+
+        public static void Reset()
+        {
+            InitializedGrenadeSlotsByAgent.Clear();
+        }
+
+        private static bool TryMarkInitialized(int agentIndex, int slotIndex)
+        {
+            if (!InitializedGrenadeSlotsByAgent.TryGetValue(agentIndex, out var slots))
+            {
+                slots = [];
+                InitializedGrenadeSlotsByAgent[agentIndex] = slots;
+            }
+
+            if (slots.Contains(slotIndex))
+            {
+                return false;
+            }
+
+            slots.Add(slotIndex);
+            return true;
         }
     }
 
@@ -284,12 +311,11 @@ namespace TOR_EngineerCareer
     internal static class EngineerGrenadeExplosionPatch
     {
         private const float BaseGrenadeExplosionRadius = 5f;
-        private static readonly Dictionary<Agent, float> HealthSnapshot = new();
+        private static readonly Dictionary<TriggeredEffect, GrenadeExplosionState> PendingExplosions = new();
+        private static readonly Dictionary<int, int> ExplosiveKillProgressByAgentIndex = new();
 
         private static void Prefix(TriggeredEffect __instance, Vec3 position, Agent triggererAgent)
         {
-            HealthSnapshot.Clear();
-
             var isEngineerMainAgent = EngineerCareerHelper.IsEngineerMainAgent(triggererAgent);
             var hasFragmentationCasing = EngineerEquipmentUpgradeHelper.LastGrenadeHasUpgrade(triggererAgent, "eng_upgrade_grenade_fragmentation_casing");
             var hasShapedCharge = EngineerEquipmentUpgradeHelper.LastGrenadeHasUpgrade(triggererAgent, "eng_upgrade_grenade_shaped_charge");
@@ -300,7 +326,7 @@ namespace TOR_EngineerCareer
             }
 
             var template = Traverse.Create(__instance).Field<TriggeredEffectTemplate>("_template").Value;
-            if (template?.StringID != EngineerCareerHelper.GrenadeExplosionId)
+            if (template?.StringID?.StartsWith(EngineerCareerHelper.GrenadeExplosionId) != true)
             {
                 return;
             }
@@ -311,16 +337,19 @@ namespace TOR_EngineerCareer
                 radius *= 1.15f;
             }
 
+            var state = new GrenadeExplosionState(triggererAgent, radius, template);
             if (isEngineerMainAgent)
             {
                 foreach (var agent in Mission.Current.GetNearbyAgents(position.AsVec2, radius, new MBList<Agent>()))
                 {
                     if (agent != null && agent.IsHuman && agent.IsEnemyOf(triggererAgent) && agent.IsActive() && agent.Health > 0f)
                     {
-                        HealthSnapshot[agent] = agent.Health;
+                        state.HealthSnapshot[agent] = agent.Health;
                     }
                 }
             }
+
+            PendingExplosions[__instance] = state;
 
             if (!hasFragmentationCasing && !hasShapedCharge && !EngineerCareerHelper.HasChoice("GrenadierPassive2"))
             {
@@ -339,27 +368,52 @@ namespace TOR_EngineerCareer
 
         private static void Postfix(TriggeredEffect __instance, Agent triggererAgent)
         {
+            if (!PendingExplosions.TryGetValue(__instance, out var state))
+            {
+                return;
+            }
+
+            PendingExplosions.Remove(__instance);
+            Traverse.Create(__instance).Field<TriggeredEffectTemplate>("_template").Value = state.OriginalTemplate;
             if (!EngineerCareerHelper.IsEngineerMainAgent(triggererAgent))
             {
                 return;
             }
 
-            var template = Traverse.Create(__instance).Field<TriggeredEffectTemplate>("_template").Value;
-            if (template?.StringID?.StartsWith(EngineerCareerHelper.GrenadeExplosionId) != true)
+            RegisterExplosionKills(triggererAgent, state.HealthSnapshot.Count(entry => !entry.Key.IsActive() || entry.Key.Health <= 0f));
+        }
+
+        internal static void RegisterExplosionKills(Agent triggererAgent, int killCount)
+        {
+            if (killCount <= 0 || !EngineerCareerHelper.IsEngineerMainAgent(triggererAgent) || !EngineerCareerHelper.HasChoice("GrenadierKeystone"))
             {
                 return;
             }
 
-            var killCount = HealthSnapshot.Count(entry => !entry.Key.IsActive() || entry.Key.Health <= 0f);
-            if (EngineerCareerHelper.ShouldRefundGrenade(triggererAgent, killCount))
+            var totalKills = ExplosiveKillProgressByAgentIndex.TryGetValue(triggererAgent.Index, out var progress)
+                ? progress + killCount
+                : killCount;
+
+            while (totalKills >= EngineerCareerHelper.GrenadeRefundKillThreshold)
             {
-                RefundGrenade(triggererAgent);
+                if (!RefundGrenade(triggererAgent))
+                {
+                    break;
+                }
+
+                totalKills -= EngineerCareerHelper.GrenadeRefundKillThreshold;
             }
 
-            HealthSnapshot.Clear();
+            ExplosiveKillProgressByAgentIndex[triggererAgent.Index] = totalKills;
         }
 
-        private static void RefundGrenade(Agent agent)
+        public static void Reset()
+        {
+            PendingExplosions.Clear();
+            ExplosiveKillProgressByAgentIndex.Clear();
+        }
+
+        private static bool RefundGrenade(Agent agent)
         {
             for (var i = 0; i < 5; i++)
             {
@@ -370,90 +424,27 @@ namespace TOR_EngineerCareer
                 }
 
                 agent.SetWeaponAmountInSlot((EquipmentIndex)i, (short)(weapon.Amount + 1), true);
-                break;
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(TorItemMenuVM), "CheckItem")]
-    internal static class EngineerInventoryGunpowderRestrictionPatch
-    {
-        private static bool Prefix(InventoryLogic inventoryLogic, List<TransferCommandResult> results)
-        {
-            if (!EngineerCareerHelper.IsEngineerHero(Hero.MainHero) || inventoryLogic == null || results == null)
-            {
                 return true;
             }
 
-            PreserveShieldAndStaffRestriction(inventoryLogic, results);
             return false;
         }
 
-        private static void PreserveShieldAndStaffRestriction(InventoryLogic inventoryLogic, List<TransferCommandResult> results)
+        private sealed class GrenadeExplosionState
         {
-            foreach (var result in results)
+            public GrenadeExplosionState(Agent caster, float radius, TriggeredEffectTemplate originalTemplate)
             {
-                if (result.ResultSide != InventoryLogic.InventorySide.BattleEquipment)
-                {
-                    continue;
-                }
-
-                var movedItem = result.EffectedItemRosterElement.EquipmentElement.Item;
-                var transferCharacter = result.TransferCharacter;
-                if (movedItem == null || transferCharacter == null)
-                {
-                    continue;
-                }
-
-                var movedIsShield = movedItem.IsShield();
-                var movedIsOffhandStaff = IsOffhandStaff(movedItem);
-                if (!movedIsShield && !movedIsOffhandStaff)
-                {
-                    continue;
-                }
-
-                var hasOtherShield = false;
-                var hasOtherOffhandStaff = false;
-                var targetEquipment = transferCharacter.GetCharacterEquipment(
-                    EquipmentIndex.Weapon0,
-                    EquipmentIndex.NumAllWeaponSlots);
-
-                foreach (var equipmentItem in targetEquipment.Where(x => x != null && x != movedItem))
-                {
-                    if (equipmentItem.IsShield())
-                    {
-                        hasOtherShield = true;
-                    }
-
-                    if (IsOffhandStaff(equipmentItem))
-                    {
-                        hasOtherOffhandStaff = true;
-                    }
-                }
-
-                if ((movedIsShield && hasOtherOffhandStaff) ||
-                    (movedIsOffhandStaff && hasOtherShield))
-                {
-                    var command = TransferCommand.Transfer(
-                        1,
-                        InventoryLogic.InventorySide.BattleEquipment,
-                        InventoryLogic.InventorySide.PlayerInventory,
-                        result.EffectedItemRosterElement,
-                        result.EffectedEquipmentIndex,
-                        EquipmentIndex.None,
-                        transferCharacter);
-
-                    inventoryLogic.AddTransferCommand(command);
-                    break;
-                }
+                Caster = caster;
+                Radius = radius;
+                OriginalTemplate = originalTemplate;
+                HealthSnapshot = new Dictionary<Agent, float>();
             }
-        }
 
-        private static bool IsOffhandStaff(ItemObject item)
-        {
-            return item != null &&
-                   (item.ItemFlags & ItemFlags.HeldInOffHand) != 0 &&
-                   item.StringId.IndexOf("staff", System.StringComparison.OrdinalIgnoreCase) >= 0;
+            public Agent Caster { get; }
+            public float Radius { get; }
+            public TriggeredEffectTemplate OriginalTemplate { get; }
+            public Dictionary<Agent, float> HealthSnapshot { get; }
         }
     }
+
 }

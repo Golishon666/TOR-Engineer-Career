@@ -44,7 +44,7 @@ namespace TOR_EngineerCareer
             RegisterGroup("IncendiaryFuses", "Incendiary Fuses", 1);
             RegisterGroup("ExplosiveRounds", "Explosive Rounds", 2);
             RegisterGroup("SuppressionFire", "Suppression Fire", 2);
-            RegisterGroup("Grenadier", "Grenadier", 2);
+            RegisterGroup("Grenadier", "Demolition", 2);
             RegisterGroup("PiercingDoctrine", "Piercing Doctrine", 3);
             RegisterGroup("RicochetTactics", "Ricochet Tactics", 3);
             RegisterGroup("GrandBattery", "Grand Battery", 3);

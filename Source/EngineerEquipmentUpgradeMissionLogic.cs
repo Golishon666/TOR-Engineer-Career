@@ -7,9 +7,7 @@ using TaleWorlds.Library;
 using TaleWorlds.Localization;
 using TaleWorlds.MountAndBlade;
 using TOR_Core.AbilitySystem;
-using TOR_Core.BattleMechanics.DamageSystem;
 using TOR_Core.Extensions;
-using TOR_Core.Utilities;
 
 namespace TOR_EngineerCareer
 {
@@ -105,13 +103,19 @@ namespace TOR_EngineerCareer
 
         public override void OnClearScene()
         {
+            EngineerGrenadeAmmoPatch.Reset();
+            EngineerGrenadeExplosionPatch.Reset();
             ClearRuntimeState();
+            ResetAbilityEnsureState();
             base.OnClearScene();
         }
 
         protected override void OnEndMission()
         {
+            EngineerGrenadeAmmoPatch.Reset();
+            EngineerGrenadeExplosionPatch.Reset();
             ClearRuntimeState();
+            ResetAbilityEnsureState();
         }
 
         public bool HasAethericStabilizer(Agent agent)
@@ -360,8 +364,11 @@ namespace TOR_EngineerCareer
         private void Detonate(DelayedExplosion keg)
         {
             PlayExplosionFeedback(keg.Position);
-            foreach (var target in Mission.Current.GetNearbyAgents(keg.Position.AsVec2, PowderKegRadius, new MBList<Agent>())
-                         .Where(agent => IsValidTarget(agent, keg.Caster)))
+            var targets = Mission.Current.GetNearbyAgents(keg.Position.AsVec2, PowderKegRadius, new MBList<Agent>())
+                         .Where(agent => IsValidTarget(agent, keg.Caster))
+                         .ToList();
+
+            foreach (var target in targets)
             {
                 var distance = target.Position.Distance(keg.Position);
                 var falloff = MBMath.ClampFloat(1f - distance / PowderKegRadius, 0.35f, 1f);
@@ -369,15 +376,20 @@ namespace TOR_EngineerCareer
                 target.ApplyDamage(damage, keg.Position, keg.Caster, doBlow: true, hasShockWave: true, originatesFromAbility: true);
                 AwardSkillXp(keg.Caster, damage);
             }
+
+            EngineerGrenadeExplosionPatch.RegisterExplosionKills(keg.Caster, targets.Count(target => !target.IsActive() || target.Health <= 0f));
         }
 
         private void ShockNearbyEnemies(Agent caster)
         {
-            foreach (var target in Mission.Current.GetNearbyAgents(caster.Position.AsVec2, GalvanicRadius, new MBList<Agent>())
-                         .Where(agent => IsValidTarget(agent, caster)))
+            var targets = Mission.Current.GetNearbyAgents(caster.Position.AsVec2, GalvanicRadius, new MBList<Agent>())
+                         .Where(agent => IsValidTarget(agent, caster))
+                         .ToList();
+
+            foreach (var target in targets)
             {
                 var damage = GetGalvanicDamage(caster);
-                TORMissionHelper.DamageAgents(new[] { target }, damage, damage, caster, damageType: DamageType.Lightning, hasShockWave: false, impactPosition: caster.Position, originSpellTemplate: caster.GetCareerAbility()?.Template);
+                target.ApplyDamage(damage, caster.Position, caster, doBlow: true, hasShockWave: true, originatesFromAbility: true);
                 AwardSkillXp(caster, damage);
             }
         }
@@ -526,6 +538,12 @@ namespace TOR_EngineerCareer
             _aethericStabilizers.Clear();
             _piercingCalibrations.Clear();
             _repeaterCranks.Clear();
+        }
+
+        private void ResetAbilityEnsureState()
+        {
+            _abilityEnsureAttempts = 0;
+            _nextAbilityEnsureTime = 0f;
         }
 
         private static void PlayExplosionFeedback(Vec3 position)

@@ -123,6 +123,7 @@ namespace TOR_EngineerCareer
             }
 
             TORMissionHelper.DamageAgents(targets, damage, damage, affectorAgent, damageType: DamageType.Fire, hasShockWave: false, impactPosition: position, originSpellTemplate: affectorAgent.GetCareerAbility()?.Template);
+            EngineerGrenadeExplosionPatch.RegisterExplosionKills(affectorAgent, targets.Count(target => !target.IsActive() || target.Health <= 0f));
         }
 
         private static void ApplyOverpenetration(Agent affectedAgent, Agent affectorAgent, Blow blow, AttackCollisionData attackCollisionData)

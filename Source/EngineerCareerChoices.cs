@@ -86,7 +86,7 @@ namespace TOR_EngineerCareer
                     MutateLetThemHaveIt("let_them_have_it_range_res")));
 
             Keystone("Grenadier",
-                "15-kill grenades refund.",
+                "7-kill explosive refunds.",
                 CombineMutations(
                     MutateStatusSkillScale("let_them_have_it_range_dmg", () => EngineerCareerHelper.GetSkill("Throwing"), EngineerCareerHelper.ThrowingEffectScale),
                     MutateStatusSkillScale("let_them_have_it_melee_rls", () => EngineerCareerHelper.GetSkill("Throwing"), EngineerCareerHelper.ThrowingEffectScale)));
@@ -114,7 +114,7 @@ namespace TOR_EngineerCareer
         {
             Passive("PowderDrill", 1, "+6 ammo per pouch.", Ammo());
             Passive("PowderDrill", 2, "+10% gunpowder damage.", GunpowderDamage(10));
-            Passive("PowderDrill", 3, "+15% firearm accuracy.", new CareerChoiceObject.PassiveEffect(-15, PassiveEffectType.AccuracyPenalty, true));
+            Passive("PowderDrill", 3, "+30% firearm accuracy.", new CareerChoiceObject.PassiveEffect(-30, PassiveEffectType.AccuracyPenalty, true));
             Passive("PowderDrill", 4, "Ranged troops: +25 Gunpowder.", new CareerChoiceObject.PassiveEffect(25, new List<string> { nameof(TORSkills.GunPowder) }, IsRangedTroop));
 
             Passive("FieldTesting", 1, "+6 ammo per pouch.", Ammo());
@@ -132,10 +132,10 @@ namespace TOR_EngineerCareer
             Passive("SuppressionFire", 3, "+10% gunpowder damage.", GunpowderDamage(10));
             Passive("SuppressionFire", 4, "+10 party size.", new CareerChoiceObject.PassiveEffect(10, PassiveEffectType.PartySize));
 
-            Passive("Grenadier", 1, "+3 grenades per pouch.", new CareerChoiceObject.PassiveEffect(3, PassiveEffectType.Special, false));
-            Passive("Grenadier", 2, "+30% grenade radius.", SpecialPassive());
+            Passive("Grenadier", 1, "+3 explosive charges per pouch.", new CareerChoiceObject.PassiveEffect(3, PassiveEffectType.Special, false));
+            Passive("Grenadier", 2, "+30% explosion radius.", SpecialPassive());
             Passive("Grenadier", 3, "+30% Fire damage.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Damage, new DamageProportionTuple(DamageType.Fire, 30), AttackTypeMask.Ranged));
-            Passive("Grenadier", 4, "+30% grenade speed.", SpecialPassive());
+            Passive("Grenadier", 4, "+30% explosive speed.", SpecialPassive());
 
             Passive("PiercingDoctrine", 1, "+6 ammo per pouch.", Ammo());
             Passive("PiercingDoctrine", 2, "+25% ranged pierce.", new CareerChoiceObject.PassiveEffect(-25, PassiveEffectType.ArmorPenetration, AttackTypeMask.Ranged));
@@ -144,7 +144,7 @@ namespace TOR_EngineerCareer
 
             Passive("RicochetTactics", 1, "+6 ammo per pouch.", Ammo());
             Passive("RicochetTactics", 2, "+15% ranged resist.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Resistance, new DamageProportionTuple(DamageType.Physical, 15), AttackTypeMask.Ranged));
-            Passive("RicochetTactics", 3, "+15% firearm accuracy.", new CareerChoiceObject.PassiveEffect(-15, PassiveEffectType.AccuracyPenalty, true));
+            Passive("RicochetTactics", 3, "+30% firearm accuracy.", new CareerChoiceObject.PassiveEffect(-30, PassiveEffectType.AccuracyPenalty, true));
             Passive("RicochetTactics", 4, "Always ricochet; 30% detonate; buckshot +3.", SpecialPassive());
 
             Passive("IncendiaryFuses", 1, "Barrage: +10% damage, ignite, charge.", SpecialPassive());

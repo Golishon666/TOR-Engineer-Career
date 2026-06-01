@@ -45,7 +45,7 @@ namespace TOR_EngineerCareer
         public const float AthleticsDurationScale = 0.03f;
         public const float GunPowderEffectScale = 0.001f;
         public const float ThrowingEffectScale = 0.001f;
-        public const int GrenadeRefundKillThreshold = 15;
+        public const int GrenadeRefundKillThreshold = 7;
         public const int MaxAbilityCharge = 400;
 
         private static readonly string[] EngineerKeystoneIds =
@@ -142,13 +142,11 @@ namespace TOR_EngineerCareer
         {
             return item != null &&
                    (item.IsGrenadeAmmo() ||
-                    item.StringId == "tor_empire_weapon_ammo_grenade" ||
                     item.StringId.Contains("blasting_charges"));
         }
 
         public static void EnsureEngineerGrenadesAreUsable()
         {
-            SetItemDifficulty("tor_empire_weapon_ammo_grenade", 0);
             SetItemDifficulty("tor_dw_weapon_grenade_hand_grenade", 0);
             SetItemDifficulty("tor_dw_weapon_blasting_charges", 0);
         }
@@ -266,8 +264,7 @@ namespace TOR_EngineerCareer
         {
             return killCount >= GrenadeRefundKillThreshold &&
                    IsEngineerMainAgent(triggererAgent) &&
-                   HasChoice("GrenadierKeystone") &&
-                   IsOpenFireActive(triggererAgent);
+                   HasChoice("GrenadierKeystone");
         }
 
         public static string BuildOpenFireDurationText()
