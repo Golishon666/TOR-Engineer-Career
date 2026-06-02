@@ -6,61 +6,61 @@
   <string id="tor_career_rank3_name.Engineer" text="{=tor_engineer_rank3}Master Engineer" />
   <string id="tor_career_description.Engineer" text="{=tor_engineer_desc}Engineers turn powder, steel and measurement into battlefield doctrine. They fight through firearms, ammunition discipline, armor penetration and experimental shot." />
 
-  <string id="tor_careerchoice_description.EngineerRoot" text="{=tor_engineer_root}Firearm damage charges Open Fire. Activates a 15s firing order." />
+  <string id="tor_careerchoice_description.EngineerRoot" text="{=tor_engineer_root}Firearm damage fills Open Fire!, then a 15s firing order follows." />
 
-  <string id="tor_careerchoice_description.PowderDrillKeystone" text="{=tor_engineer_powder_key}Open Fire!: +5s; scales Gunpowder." />
-  <string id="tor_careerchoice_description.PowderDrillPassive1" text="{=tor_engineer_powder_p1}+6 ammo per pouch." />
-  <string id="tor_careerchoice_description.PowderDrillPassive2" text="{=tor_engineer_powder_p2}+10% gunpowder damage." />
-  <string id="tor_careerchoice_description.PowderDrillPassive3" text="{=tor_engineer_powder_p3}+30% firearm accuracy." />
-  <string id="tor_careerchoice_description.PowderDrillPassive4" text="{=tor_engineer_powder_p4}Ranged troops: +25 Gunpowder." />
+  <string id="tor_careerchoice_description.PowderDrillKeystone" text="{=tor_engineer_powder_key}Open Fire! lasts longer; Gunpowder tightens the drill." />
+  <string id="tor_careerchoice_description.PowderDrillPassive1" text="{=tor_engineer_powder_p1}+6 ammo per pouch. Every cartridge has its place." />
+  <string id="tor_careerchoice_description.PowderDrillPassive2" text="{=tor_engineer_powder_p2}+10% gunpowder damage. Better powder, louder answers." />
+  <string id="tor_careerchoice_description.PowderDrillPassive3" text="{=tor_engineer_powder_p3}+30% firearm accuracy. Rifling, gauges and steady hands." />
+  <string id="tor_careerchoice_description.PowderDrillPassive4" text="{=tor_engineer_powder_p4}Ranged troops gain +25 Gunpowder from your field drills." />
 
-  <string id="tor_careerchoice_description.FieldTestingKeystone" text="{=tor_engineer_field_key}Open Fire!: resist; scales Athletics." />
-  <string id="tor_careerchoice_description.FieldTestingPassive1" text="{=tor_engineer_field_p1}+6 ammo per pouch." />
-  <string id="tor_careerchoice_description.FieldTestingPassive2" text="{=tor_engineer_field_p2}+15% ranged resist." />
-  <string id="tor_careerchoice_description.FieldTestingPassive3" text="{=tor_engineer_field_p3}+15% firearm speed." />
-  <string id="tor_careerchoice_description.FieldTestingPassive4" text="{=tor_engineer_field_p4}+1 map speed." />
+  <string id="tor_careerchoice_description.FieldTestingKeystone" text="{=tor_engineer_field_key}Open Fire! hardens the line; Athletics improves the brace." />
+  <string id="tor_careerchoice_description.FieldTestingPassive1" text="{=tor_engineer_field_p1}+6 ammo per pouch. Test loads survive the march." />
+  <string id="tor_careerchoice_description.FieldTestingPassive2" text="{=tor_engineer_field_p2}+15% ranged resist. Duck, brace, return fire." />
+  <string id="tor_careerchoice_description.FieldTestingPassive3" text="{=tor_engineer_field_p3}+15% firearm speed. Hotter charges fly faster." />
+  <string id="tor_careerchoice_description.FieldTestingPassive4" text="{=tor_engineer_field_p4}+1 map speed. Surveyor routes keep the column moving." />
 
-  <string id="tor_careerchoice_description.ExplosiveRoundsKeystone" text="{=tor_engineer_explosive_key}Bullets explode; Open Fire! +radius." />
-  <string id="tor_careerchoice_description.ExplosiveRoundsPassive1" text="{=tor_engineer_explosive_p1}+6 ammo per pouch." />
-  <string id="tor_careerchoice_description.ExplosiveRoundsPassive2" text="{=tor_engineer_explosive_p2}No ranged stagger." />
-  <string id="tor_careerchoice_description.ExplosiveRoundsPassive3" text="{=tor_engineer_explosive_p3}Ranged troops: +10% damage." />
-  <string id="tor_careerchoice_description.ExplosiveRoundsPassive4" text="{=tor_engineer_explosive_p4}+10% ranged pierce." />
+  <string id="tor_careerchoice_description.ExplosiveRoundsKeystone" text="{=tor_engineer_explosive_key}Bullets burst on impact; Open Fire! throws blasts wider." />
+  <string id="tor_careerchoice_description.ExplosiveRoundsPassive1" text="{=tor_engineer_explosive_p1}+6 ammo per pouch. Extra rounds for volatile work." />
+  <string id="tor_careerchoice_description.ExplosiveRoundsPassive2" text="{=tor_engineer_explosive_p2}No ranged stagger. Shrapnel will not break your aim." />
+  <string id="tor_careerchoice_description.ExplosiveRoundsPassive3" text="{=tor_engineer_explosive_p3}Ranged troops deal +10% damage under your firing tables." />
+  <string id="tor_careerchoice_description.ExplosiveRoundsPassive4" text="{=tor_engineer_explosive_p4}+10% ranged pierce. Hardened shot finds the gap." />
 
-  <string id="tor_careerchoice_description.SuppressionFireKeystone" text="{=tor_engineer_suppression_key}Open Fire!: +area, +resist." />
-  <string id="tor_careerchoice_description.SuppressionFirePassive1" text="{=tor_engineer_suppression_p1}+6 ammo per pouch." />
-  <string id="tor_careerchoice_description.SuppressionFirePassive2" text="{=tor_engineer_suppression_p2}Ranged troops: +10% resist." />
-  <string id="tor_careerchoice_description.SuppressionFirePassive3" text="{=tor_engineer_suppression_p3}+10% gunpowder damage." />
-  <string id="tor_careerchoice_description.SuppressionFirePassive4" text="{=tor_engineer_suppression_p4}+10 party size." />
+  <string id="tor_careerchoice_description.SuppressionFireKeystone" text="{=tor_engineer_suppression_key}Open Fire! covers more ground and steadies the line." />
+  <string id="tor_careerchoice_description.SuppressionFirePassive1" text="{=tor_engineer_suppression_p1}+6 ammo per pouch. Suppression needs deep pockets." />
+  <string id="tor_careerchoice_description.SuppressionFirePassive2" text="{=tor_engineer_suppression_p2}Ranged troops gain +10% resist while holding the line." />
+  <string id="tor_careerchoice_description.SuppressionFirePassive3" text="{=tor_engineer_suppression_p3}+10% gunpowder damage. Keep their heads down." />
+  <string id="tor_careerchoice_description.SuppressionFirePassive4" text="{=tor_engineer_suppression_p4}+10 party size. More barrels for the battery." />
 
-  <string id="tor_careerchoice_description.GrenadierKeystone" text="{=tor_engineer_grenadier_key}7-kill explosive refunds." />
-  <string id="tor_careerchoice_description.GrenadierPassive1" text="{=tor_engineer_grenadier_p1}+3 explosive charges per pouch." />
-  <string id="tor_careerchoice_description.GrenadierPassive2" text="{=tor_engineer_grenadier_p2}+30% explosion radius." />
-  <string id="tor_careerchoice_description.GrenadierPassive3" text="{=tor_engineer_grenadier_p3}+30% Fire damage." />
-  <string id="tor_careerchoice_description.GrenadierPassive4" text="{=tor_engineer_grenadier_p4}+30% explosive speed." />
+  <string id="tor_careerchoice_description.GrenadierKeystone" text="{=tor_engineer_grenadier_key}Every 7 explosive kills refunds a charge." />
+  <string id="tor_careerchoice_description.GrenadierPassive1" text="{=tor_engineer_grenadier_p1}+3 explosive charges per pouch. Pack them tight." />
+  <string id="tor_careerchoice_description.GrenadierPassive2" text="{=tor_engineer_grenadier_p2}+30% explosion radius. The blast grows greedy." />
+  <string id="tor_careerchoice_description.GrenadierPassive3" text="{=tor_engineer_grenadier_p3}+30% Fire damage. The fuse bites deeper." />
+  <string id="tor_careerchoice_description.GrenadierPassive4" text="{=tor_engineer_grenadier_p4}+30% explosive speed. Arcs flatten, fuses hurry." />
 
-  <string id="tor_careerchoice_description.PiercingDoctrineKeystone" text="{=tor_engineer_piercing_key}Bullets overpenetrate." />
-  <string id="tor_careerchoice_description.PiercingDoctrinePassive1" text="{=tor_engineer_piercing_p1}+6 ammo per pouch." />
-  <string id="tor_careerchoice_description.PiercingDoctrinePassive2" text="{=tor_engineer_piercing_p2}+25% ranged pierce." />
-  <string id="tor_careerchoice_description.PiercingDoctrinePassive3" text="{=tor_engineer_piercing_p3}+20% gunpowder damage." />
-  <string id="tor_careerchoice_description.PiercingDoctrinePassive4" text="{=tor_engineer_piercing_p4}Ranged troops: +15% damage." />
+  <string id="tor_careerchoice_description.PiercingDoctrineKeystone" text="{=tor_engineer_piercing_key}Bullets punch through and keep looking for trouble." />
+  <string id="tor_careerchoice_description.PiercingDoctrinePassive1" text="{=tor_engineer_piercing_p1}+6 ammo per pouch. Piercing work takes practice." />
+  <string id="tor_careerchoice_description.PiercingDoctrinePassive2" text="{=tor_engineer_piercing_p2}+25% ranged pierce. Measure armor, then ignore it." />
+  <string id="tor_careerchoice_description.PiercingDoctrinePassive3" text="{=tor_engineer_piercing_p3}+20% gunpowder damage. Pressure wins arguments." />
+  <string id="tor_careerchoice_description.PiercingDoctrinePassive4" text="{=tor_engineer_piercing_p4}Ranged troops deal +15% damage with drilled volleys." />
 
-  <string id="tor_careerchoice_description.RicochetTacticsKeystone" text="{=tor_engineer_ricochet_key}Open Fire!: ricochet; 30% detonate." />
-  <string id="tor_careerchoice_description.RicochetTacticsPassive1" text="{=tor_engineer_ricochet_p1}+6 ammo per pouch." />
-  <string id="tor_careerchoice_description.RicochetTacticsPassive2" text="{=tor_engineer_ricochet_p2}+15% ranged resist." />
-  <string id="tor_careerchoice_description.RicochetTacticsPassive3" text="{=tor_engineer_ricochet_p3}+30% firearm accuracy." />
-  <string id="tor_careerchoice_description.RicochetTacticsPassive4" text="{=tor_engineer_ricochet_p4}Always ricochet; 30% detonate; buckshot +3." />
+  <string id="tor_careerchoice_description.RicochetTacticsKeystone" text="{=tor_engineer_ricochet_key}Open Fire! turns rebounds into 30% detonation chances." />
+  <string id="tor_careerchoice_description.RicochetTacticsPassive1" text="{=tor_engineer_ricochet_p1}+6 ammo per pouch. Spare shot for improbable angles." />
+  <string id="tor_careerchoice_description.RicochetTacticsPassive2" text="{=tor_engineer_ricochet_p2}+15% ranged resist. Cover, angles and stubborn helmets." />
+  <string id="tor_careerchoice_description.RicochetTacticsPassive3" text="{=tor_engineer_ricochet_p3}+30% firearm accuracy. Calculated rebounds start true." />
+  <string id="tor_careerchoice_description.RicochetTacticsPassive4" text="{=tor_engineer_ricochet_p4}Ricochets always happen; 30% detonate; buckshot +3." />
 
-  <string id="tor_careerchoice_description.IncendiaryFusesKeystone" text="{=tor_engineer_fuses_key}Barrage: incendiary upgrades." />
-  <string id="tor_careerchoice_description.IncendiaryFusesPassive1" text="{=tor_engineer_fuses_p1}Barrage: +10% damage, ignite, charge." />
-  <string id="tor_careerchoice_description.IncendiaryFusesPassive2" text="{=tor_engineer_fuses_p2}Barrage burn: +2s, double stack." />
-  <string id="tor_careerchoice_description.IncendiaryFusesPassive3" text="{=tor_engineer_fuses_p3}Barrage cooldown -5s." />
-  <string id="tor_careerchoice_description.IncendiaryFusesPassive4" text="{=tor_engineer_fuses_p4}+30% Fire damage." />
+  <string id="tor_careerchoice_description.IncendiaryFusesKeystone" text="{=tor_engineer_fuses_key}Barrage learns to burn, linger and feed Open Fire!" />
+  <string id="tor_careerchoice_description.IncendiaryFusesPassive1" text="{=tor_engineer_fuses_p1}Barrage: +10% damage, ignites, charges Open Fire!" />
+  <string id="tor_careerchoice_description.IncendiaryFusesPassive2" text="{=tor_engineer_fuses_p2}Barrage burn lasts +2s and can stack twice." />
+  <string id="tor_careerchoice_description.IncendiaryFusesPassive3" text="{=tor_engineer_fuses_p3}Barrage cooldown -5s. The crews reload hot." />
+  <string id="tor_careerchoice_description.IncendiaryFusesPassive4" text="{=tor_engineer_fuses_p4}+30% Fire damage. Everything burns brighter." />
 
-  <string id="tor_careerchoice_description.GrandBatteryKeystone" text="{=tor_engineer_battery_key}Barrage: +1 max gun, +1 shell per gun." />
-  <string id="tor_careerchoice_description.GrandBatteryPassive1" text="{=tor_engineer_battery_p1}Barrage: +2 shells." />
-  <string id="tor_careerchoice_description.GrandBatteryPassive2" text="{=tor_engineer_battery_p2}Barrage: +10% damage." />
-  <string id="tor_careerchoice_description.GrandBatteryPassive3" text="{=tor_engineer_battery_p3}Barrage: larger impact radius." />
-  <string id="tor_careerchoice_description.GrandBatteryPassive4" text="{=tor_engineer_battery_p4}Barrage: +2 shells, -5s cooldown." />
+  <string id="tor_careerchoice_description.GrandBatteryKeystone" text="{=tor_engineer_battery_key}Barrage fields +1 max gun and +1 shell per gun." />
+  <string id="tor_careerchoice_description.GrandBatteryPassive1" text="{=tor_engineer_battery_p1}Barrage fires +2 shells. The battery speaks longer." />
+  <string id="tor_careerchoice_description.GrandBatteryPassive2" text="{=tor_engineer_battery_p2}Barrage deals +10% damage. Heavier powder, harder fall." />
+  <string id="tor_careerchoice_description.GrandBatteryPassive3" text="{=tor_engineer_battery_p3}Barrage impacts cover a wider killing ground." />
+  <string id="tor_careerchoice_description.GrandBatteryPassive4" text="{=tor_engineer_battery_p4}Barrage fires +2 shells and reloads 5s sooner." />
 
   <string id="tor_engineer_cc_option" text="{=tor_engineer_cc_option}Imperial Engineer" />
   <string id="tor_engineer_cc_effect" text="{=tor_engineer_cc_effect}Engineer Career" />

@@ -427,7 +427,7 @@ namespace TOR_EngineerCareer
 
         private static void AwardSkillXp(Agent caster, int damage)
         {
-            if (damage <= 0 || !(Game.Current?.GameType is Campaign))
+            if (damage <= 0)
             {
                 return;
             }

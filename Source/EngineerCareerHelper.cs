@@ -269,12 +269,12 @@ namespace TOR_EngineerCareer
 
         public static string BuildOpenFireDurationText()
         {
-            return $"Base duration: {BaseOpenFireDuration:0}s.";
+            return $"Open Fire! lasts {BaseOpenFireDuration:0}s.";
         }
 
         public static string BuildOpenFireDescriptionText()
         {
-            return $"Firearm damage charges Open Fire. Activates a {BaseOpenFireDuration:0}s firing order.";
+            return $"Firearm damage fills Open Fire!, then a {BaseOpenFireDuration:0}s firing order follows.";
         }
 
         public static SkillObject GetGunpowderSkill()

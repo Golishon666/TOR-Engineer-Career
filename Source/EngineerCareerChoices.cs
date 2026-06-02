@@ -59,7 +59,7 @@ namespace TOR_EngineerCareer
                     MutateLetThemHaveIt("let_them_have_it_range_dmg", "let_them_have_it_melee_rls")));
 
             Keystone("PowderDrill",
-                "Open Fire!: +5s; scales Gunpowder.",
+                "Open Fire! lasts longer; Gunpowder tightens the drill.",
                 CombineMutations(
                     MutateAbilityFloat(nameof(AbilityTemplate.Duration), EngineerCareerHelper.PowderDrillDurationBonus),
                     MutateStatusAdd("let_them_have_it_melee_rls", 0.10f),
@@ -67,95 +67,95 @@ namespace TOR_EngineerCareer
                     MutateStatusSkillScale("let_them_have_it_range_dmg", () => EngineerCareerHelper.GetGunpowderSkill(), EngineerCareerHelper.GunPowderEffectScale)));
 
             Keystone("FieldTesting",
-                "Open Fire!: resist; scales Athletics.",
+                "Open Fire! hardens the line; Athletics improves the brace.",
                 CombineMutations(
                     MutateLetThemHaveIt("let_them_have_it_range_res"),
                     MutateAbilitySkillScale(nameof(AbilityTemplate.Duration), () => EngineerCareerHelper.GetSkill("Athletics"), EngineerCareerHelper.AthleticsDurationScale),
                     MutateStatusSkillScale("let_them_have_it_range_res", () => EngineerCareerHelper.GetSkill("Athletics"), 0.0005f)));
 
             Keystone("ExplosiveRounds",
-                "Bullets explode; Open Fire! +radius.",
+                "Bullets burst on impact; Open Fire! throws blasts wider.",
                 CombineMutations(
                     MutateAbilityFloat(nameof(AbilityTemplate.Radius), 0.5f),
                     MutateLetThemHaveIt("let_them_have_it_range_dmg")));
 
             Keystone("SuppressionFire",
-                "Open Fire!: +area, +resist.",
+                "Open Fire! covers more ground and steadies the line.",
                 CombineMutations(
                     MutateTriggeredEffectFloat("apply_let_them_have_it", nameof(TriggeredEffectTemplate.Radius), 2f),
                     MutateLetThemHaveIt("let_them_have_it_range_res")));
 
             Keystone("Grenadier",
-                "7-kill explosive refunds.",
+                "Every 7 explosive kills refunds a charge.",
                 CombineMutations(
                     MutateStatusSkillScale("let_them_have_it_range_dmg", () => EngineerCareerHelper.GetSkill("Throwing"), EngineerCareerHelper.ThrowingEffectScale),
                     MutateStatusSkillScale("let_them_have_it_melee_rls", () => EngineerCareerHelper.GetSkill("Throwing"), EngineerCareerHelper.ThrowingEffectScale)));
 
             Keystone("PiercingDoctrine",
-                "Bullets overpenetrate.",
+                "Bullets punch through and keep looking for trouble.",
                 MutateStatusAdd("let_them_have_it_range_dmg", 0.15f));
 
             Keystone("RicochetTactics",
-                "Open Fire!: ricochet; 30% detonate.",
+                "Open Fire! turns rebounds into 30% detonation chances.",
                 CombineMutations(
                     MutateAbilityFloat(nameof(AbilityTemplate.Duration), EngineerCareerHelper.RicochetTacticsDurationBonus),
                     MutateTriggeredEffectFloat("apply_let_them_have_it", nameof(TriggeredEffectTemplate.Radius), 2f)));
 
             Keystone("IncendiaryFuses",
-                "Barrage: incendiary upgrades.",
+                "Barrage learns to burn, linger and feed Open Fire!",
                 NoMutations());
 
             Keystone("GrandBattery",
-                "Barrage: +1 max gun, +1 shell per gun.",
+                "Barrage fields +1 max gun and +1 shell per gun.",
                 NoMutations());
         }
 
         protected override void InitializePassives()
         {
-            Passive("PowderDrill", 1, "+6 ammo per pouch.", Ammo());
-            Passive("PowderDrill", 2, "+10% gunpowder damage.", GunpowderDamage(10));
-            Passive("PowderDrill", 3, "+30% firearm accuracy.", new CareerChoiceObject.PassiveEffect(-30, PassiveEffectType.AccuracyPenalty, true));
-            Passive("PowderDrill", 4, "Ranged troops: +25 Gunpowder.", new CareerChoiceObject.PassiveEffect(25, new List<string> { nameof(TORSkills.GunPowder) }, IsRangedTroop));
+            Passive("PowderDrill", 1, "+6 ammo per pouch. Every cartridge has its place.", Ammo());
+            Passive("PowderDrill", 2, "+10% gunpowder damage. Better powder, louder answers.", GunpowderDamage(10));
+            Passive("PowderDrill", 3, "+30% firearm accuracy. Rifling, gauges and steady hands.", new CareerChoiceObject.PassiveEffect(-30, PassiveEffectType.AccuracyPenalty, true));
+            Passive("PowderDrill", 4, "Ranged troops gain +25 Gunpowder from your field drills.", new CareerChoiceObject.PassiveEffect(25, new List<string> { nameof(TORSkills.GunPowder) }, IsRangedTroop));
 
-            Passive("FieldTesting", 1, "+6 ammo per pouch.", Ammo());
-            Passive("FieldTesting", 2, "+15% ranged resist.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Resistance, new DamageProportionTuple(DamageType.Physical, 15), AttackTypeMask.Ranged));
-            Passive("FieldTesting", 3, "+15% firearm speed.", SpecialPassive());
-            Passive("FieldTesting", 4, "+1 map speed.", new CareerChoiceObject.PassiveEffect(1f, PassiveEffectType.PartyMovementSpeed));
+            Passive("FieldTesting", 1, "+6 ammo per pouch. Test loads survive the march.", Ammo());
+            Passive("FieldTesting", 2, "+15% ranged resist. Duck, brace, return fire.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Resistance, new DamageProportionTuple(DamageType.Physical, 15), AttackTypeMask.Ranged));
+            Passive("FieldTesting", 3, "+15% firearm speed. Hotter charges fly faster.", SpecialPassive());
+            Passive("FieldTesting", 4, "+1 map speed. Surveyor routes keep the column moving.", new CareerChoiceObject.PassiveEffect(1f, PassiveEffectType.PartyMovementSpeed));
 
-            Passive("ExplosiveRounds", 1, "+6 ammo per pouch.", Ammo());
-            Passive("ExplosiveRounds", 2, "No ranged stagger.", SpecialPassive());
-            Passive("ExplosiveRounds", 3, "Ranged troops: +10% damage.", TroopRangedDamage(10));
-            Passive("ExplosiveRounds", 4, "+10% ranged pierce.", new CareerChoiceObject.PassiveEffect(-10, PassiveEffectType.ArmorPenetration, AttackTypeMask.Ranged));
+            Passive("ExplosiveRounds", 1, "+6 ammo per pouch. Extra rounds for volatile work.", Ammo());
+            Passive("ExplosiveRounds", 2, "No ranged stagger. Shrapnel will not break your aim.", SpecialPassive());
+            Passive("ExplosiveRounds", 3, "Ranged troops deal +10% damage under your firing tables.", TroopRangedDamage(10));
+            Passive("ExplosiveRounds", 4, "+10% ranged pierce. Hardened shot finds the gap.", new CareerChoiceObject.PassiveEffect(-10, PassiveEffectType.ArmorPenetration, AttackTypeMask.Ranged));
 
-            Passive("SuppressionFire", 1, "+6 ammo per pouch.", Ammo());
-            Passive("SuppressionFire", 2, "Ranged troops: +10% resist.", TroopRangedResistance(10));
-            Passive("SuppressionFire", 3, "+10% gunpowder damage.", GunpowderDamage(10));
-            Passive("SuppressionFire", 4, "+10 party size.", new CareerChoiceObject.PassiveEffect(10, PassiveEffectType.PartySize));
+            Passive("SuppressionFire", 1, "+6 ammo per pouch. Suppression needs deep pockets.", Ammo());
+            Passive("SuppressionFire", 2, "Ranged troops gain +10% resist while holding the line.", TroopRangedResistance(10));
+            Passive("SuppressionFire", 3, "+10% gunpowder damage. Keep their heads down.", GunpowderDamage(10));
+            Passive("SuppressionFire", 4, "+10 party size. More barrels for the battery.", new CareerChoiceObject.PassiveEffect(10, PassiveEffectType.PartySize));
 
-            Passive("Grenadier", 1, "+3 explosive charges per pouch.", new CareerChoiceObject.PassiveEffect(3, PassiveEffectType.Special, false));
-            Passive("Grenadier", 2, "+30% explosion radius.", SpecialPassive());
-            Passive("Grenadier", 3, "+30% Fire damage.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Damage, new DamageProportionTuple(DamageType.Fire, 30), AttackTypeMask.Ranged));
-            Passive("Grenadier", 4, "+30% explosive speed.", SpecialPassive());
+            Passive("Grenadier", 1, "+3 explosive charges per pouch. Pack them tight.", new CareerChoiceObject.PassiveEffect(3, PassiveEffectType.Special, false));
+            Passive("Grenadier", 2, "+30% explosion radius. The blast grows greedy.", SpecialPassive());
+            Passive("Grenadier", 3, "+30% Fire damage. The fuse bites deeper.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Damage, new DamageProportionTuple(DamageType.Fire, 30), AttackTypeMask.Ranged));
+            Passive("Grenadier", 4, "+30% explosive speed. Arcs flatten, fuses hurry.", SpecialPassive());
 
-            Passive("PiercingDoctrine", 1, "+6 ammo per pouch.", Ammo());
-            Passive("PiercingDoctrine", 2, "+25% ranged pierce.", new CareerChoiceObject.PassiveEffect(-25, PassiveEffectType.ArmorPenetration, AttackTypeMask.Ranged));
-            Passive("PiercingDoctrine", 3, "+20% gunpowder damage.", GunpowderDamage(20));
-            Passive("PiercingDoctrine", 4, "Ranged troops: +15% damage.", TroopRangedDamage(15));
+            Passive("PiercingDoctrine", 1, "+6 ammo per pouch. Piercing work takes practice.", Ammo());
+            Passive("PiercingDoctrine", 2, "+25% ranged pierce. Measure armor, then ignore it.", new CareerChoiceObject.PassiveEffect(-25, PassiveEffectType.ArmorPenetration, AttackTypeMask.Ranged));
+            Passive("PiercingDoctrine", 3, "+20% gunpowder damage. Pressure wins arguments.", GunpowderDamage(20));
+            Passive("PiercingDoctrine", 4, "Ranged troops deal +15% damage with drilled volleys.", TroopRangedDamage(15));
 
-            Passive("RicochetTactics", 1, "+6 ammo per pouch.", Ammo());
-            Passive("RicochetTactics", 2, "+15% ranged resist.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Resistance, new DamageProportionTuple(DamageType.Physical, 15), AttackTypeMask.Ranged));
-            Passive("RicochetTactics", 3, "+30% firearm accuracy.", new CareerChoiceObject.PassiveEffect(-30, PassiveEffectType.AccuracyPenalty, true));
-            Passive("RicochetTactics", 4, "Always ricochet; 30% detonate; buckshot +3.", SpecialPassive());
+            Passive("RicochetTactics", 1, "+6 ammo per pouch. Spare shot for improbable angles.", Ammo());
+            Passive("RicochetTactics", 2, "+15% ranged resist. Cover, angles and stubborn helmets.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Resistance, new DamageProportionTuple(DamageType.Physical, 15), AttackTypeMask.Ranged));
+            Passive("RicochetTactics", 3, "+30% firearm accuracy. Calculated rebounds start true.", new CareerChoiceObject.PassiveEffect(-30, PassiveEffectType.AccuracyPenalty, true));
+            Passive("RicochetTactics", 4, "Ricochets always happen; 30% detonate; buckshot +3.", SpecialPassive());
 
-            Passive("IncendiaryFuses", 1, "Barrage: +10% damage, ignite, charge.", SpecialPassive());
-            Passive("IncendiaryFuses", 2, "Barrage burn: +2s, double stack.", SpecialPassive());
-            Passive("IncendiaryFuses", 3, "Barrage cooldown -5s.", SpecialPassive());
-            Passive("IncendiaryFuses", 4, "+30% Fire damage.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Damage, new DamageProportionTuple(DamageType.Fire, 30), AttackTypeMask.Ranged));
+            Passive("IncendiaryFuses", 1, "Barrage: +10% damage, ignites, charges Open Fire!", SpecialPassive());
+            Passive("IncendiaryFuses", 2, "Barrage burn lasts +2s and can stack twice.", SpecialPassive());
+            Passive("IncendiaryFuses", 3, "Barrage cooldown -5s. The crews reload hot.", SpecialPassive());
+            Passive("IncendiaryFuses", 4, "+30% Fire damage. Everything burns brighter.", new CareerChoiceObject.PassiveEffect(PassiveEffectType.Damage, new DamageProportionTuple(DamageType.Fire, 30), AttackTypeMask.Ranged));
 
-            Passive("GrandBattery", 1, "Barrage: +2 shells.", SpecialPassive());
-            Passive("GrandBattery", 2, "Barrage: +10% damage.", SpecialPassive());
-            Passive("GrandBattery", 3, "Barrage: larger impact radius.", SpecialPassive());
-            Passive("GrandBattery", 4, "Barrage: +2 shells, -5s cooldown.", SpecialPassive());
+            Passive("GrandBattery", 1, "Barrage fires +2 shells. The battery speaks longer.", SpecialPassive());
+            Passive("GrandBattery", 2, "Barrage deals +10% damage. Heavier powder, harder fall.", SpecialPassive());
+            Passive("GrandBattery", 3, "Barrage impacts cover a wider killing ground.", SpecialPassive());
+            Passive("GrandBattery", 4, "Barrage fires +2 shells and reloads 5s sooner.", SpecialPassive());
         }
 
         private static CareerChoiceObject Register(string id)

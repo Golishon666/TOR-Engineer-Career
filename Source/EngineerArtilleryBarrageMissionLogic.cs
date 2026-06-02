@@ -328,7 +328,7 @@ namespace TOR_EngineerCareer
 
         private static void AwardBarrageSkillXp(Agent caster, int damage)
         {
-            if (damage <= 0 || !(Game.Current?.GameType is Campaign))
+            if (damage <= 0)
             {
                 return;
             }
